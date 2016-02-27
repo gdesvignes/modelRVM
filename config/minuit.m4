@@ -24,27 +24,33 @@ AC_DEFUN([SWIN_LIB_MINUIT],
 [
   AC_PROVIDE([SWIN_LIB_MINUIT])
 
-  MINUIT_CFLAGS=""
-  MINUIT_LIBS=""
+  SWIN_PACKAGE_OPTIONS([minuit])
 
   if test x"$MINUIT_HOME" != x; then
     MINUIT_CFLAGS="-I$MINUIT_HOME/include"
     MINUIT_LIBS="-L$MINUIT_HOME/lib"
+    have_minuit=yes
+  else 
+    MINUIT_CFLAGS="-I$with_minuit_include_dir"
+    MINUIT_LIBS="-L$with_minuit_lib_dir"
   fi
+  ac_save_CFLAGS="$CFLAGS"
+  ac_save_CXXFLAGS="$CXXFLAGS"
+  ac_save_LIBS="$LIBS"
 
   MINUIT_LIBS="$MINUIT_LIBS -lMinuit2 -fopenmp"
 
-  ac_save_CFLAGS="$CFLAGS"
-  ac_save_LIBS="$LIBS"
   LIBS="$ac_save_LIBS $MINUIT_LIBS"
   CFLAGS="$ac_save_CFLAGS $MINUIT_CFLAGS"
-  CXXFLAGS="$ac_save_CFLAGS $MINUIT_CFLAGS"
+  CXXFLAGS="$ac_save_CXXFLAGS $MINUIT_CFLAGS"
 
-                compile_minuit=yes
 
-  if test x"$compile_minuit" = xyes; then
-      AC_MSG_NOTICE(Running Minuit to confirm runtime linking...)
-      AC_LANG_PUSH(C++)
+  AC_MSG_CHECKING([for Minuit installation])
+
+  AC_LANG_PUSH(C++)
+
+  
+
       AC_TRY_RUN(
           [
 
@@ -64,20 +70,17 @@ AC_DEFUN([SWIN_LIB_MINUIT],
 	    } /* main */
 		  ],
 		  [
-		      AC_MSG_NOTICE(Running Minuit successful)
 		      have_minuit=yes
 		  ],
 		  [
-		      AC_MSG_NOTICE(Running Minuit failed)
 		  ])
       AC_LANG_POP(C++)
-  fi
 
-  AC_MSG_CHECKING([for Minuit installation])
   AC_MSG_RESULT($have_minuit)
 
   LIBS="$ac_save_LIBS"
   CFLAGS="$ac_save_CFLAGS"
+  CXXFLAGS="$ac_save_CXXFLAGS"
 
   if test x"$have_minuit" = xyes; then
     AC_DEFINE([HAVE_MINUIT], [1], [Define to 1 if you have the MINUIT library])
@@ -85,11 +88,10 @@ AC_DEFUN([SWIN_LIB_MINUIT],
   else
     AC_MSG_WARN([Minuit code will not be compiled. This only affects MultiNest plugins.])
 
-    if test x"$compile_minuit" = xyes; then
+    if test x"$have_minuit" = xyes; then
       AC_MSG_WARN([***************************************************************])
-      AC_MSG_WARN([Minuit code can be compiled, but it cannot be run. This most])
-      AC_MSG_WARN([likely means that the MultiNest library libnest3.so is not in the])
-      AC_MSG_WARN([path. Please set (DY)LD_LIBRARY_PATH correctly.])
+      AC_MSG_WARN([Minuit code can be compiled, but it cannot be run. ])
+      AC_MSG_WARN([Please set (DY)LD_LIBRARY_PATH correctly.])
       AC_MSG_WARN([***************************************************************])
     else
       if test x"$MINUIT_HOME" = x; then
