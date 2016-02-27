@@ -29,7 +29,6 @@
 #include "stdio.h"
 #include "stdlib.h"
 
-#define NB_PTS_PROF 1024.0
 #define R2D (180.0/M_PI)
 
 using namespace std;
@@ -42,7 +41,7 @@ int main(int argc, char **argv) {
   int nfree = 0;
   double threshold=3;
   double alpha=80.0, beta=6.0, phi0=18.0, psi0=30.0;
-  bool alpha_fixed=false, beta_fixed=false, phi0_fixed=false, psi0_fixed=false;
+  bool alpha_fixed=false, beta_fixed=false, phi0_fixed=false, psi0_fixed=false, output=false;
   char filename[128]="test.pa";
   char label[16];
 
@@ -91,6 +90,9 @@ int main(int argc, char **argv) {
           case 'Z':
               psi0_fixed = true;
               break;
+          case 'o':
+              output = true;
+              break;
           case 'f':
               strncpy(filename, optarg, 127);
               break;
@@ -132,8 +134,6 @@ int main(int argc, char **argv) {
   Estimate<double> rmsQ = sqrt( stats.get_baseline_variance(1) );
   Estimate<double> rmsU = sqrt( stats.get_baseline_variance(2) );
 
-  //printf("Rms I = %lf Rms Q = %lf  rmsU= %lf\n", rmsI.get_value(), rmsQ.get_value(), rmsU.get_value());
-
   double max_L=0.;
   double ph;
 
@@ -165,7 +165,7 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
 #endif
       //if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h) || (ex3l <= ph && ph <= ex3h)) continue;
       if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
-        phase.push_back((ibin+.5)*(2*M_PI/NB_PTS_PROF));
+        phase.push_back((ibin+.5)*(2*M_PI/(double)archive->get_nbin()));
         phase_bin.push_back(ibin);
         totI.push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
         Q.push_back(integration->get_Profile(1,0)->get_amps()[ibin]);
@@ -215,7 +215,6 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
   fFCN.setErrorDef(1.0);
   fFCN.setErrorDef(4.);
   MnMinos Minos(fFCN, min, MnStrategy(2));
-  //fFCN.setErrorDef(4.);
   pair<double, double> e0, e1, e2, e3;
   if (!alpha_fixed) e0 = Minos(0);
   if (!beta_fixed) e1 = Minos(1);
@@ -228,17 +227,6 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
   if (!phi0_fixed) cout<<"par2: "<<min.UserState().Value("phi0")<<" + "<<e2.first<<" "<<e2.second<<endl;
   if (!psi0_fixed) cout<<"par3: "<<min.UserState().Value("psi0")<<" + "<<e3.first<<" "<<e3.second<<endl;
 
-  /*{
-    MnScan scan(fFCN, upar);
-    cout<<"scan parameters: "<<scan.Parameters()<<endl;
-    MnPlot plot;
-    for(unsigned int i = 0; i < upar.VariableParameters(); i++) {
-      vector<pair<double, double> > xy = scan.Scan(i);
-//       vector<pair<double, double> > xy = scan.scan(0);
-      plot(xy);
-    }
-    cout<<scan.Parameters()<<endl;
-  }*/
 
   {
     // create contours factory with FCN and minimum
@@ -251,9 +239,9 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
     plot(min.UserState().Value("alpha"), min.UserState().Value("beta"), cont4);
   }
 
-  cout <<"Simple> "<< mjd<< " " <<min.UserState().Value("alpha")<<" "<<e0.first<<" "<<e0.second <<" "<<min.UserState().Value("beta")<< " "<<e1.first<<" "<<e1.second<<" " <<min.UserState().Value("phi0")<<" "<<e2.first<<" "<<e2.second <<" "<<min.UserState().Value("psi0")<<" "<<e3.first<<" "<<e3.second<< " "<<min.Fval()/(phase.size() - 4 - 1)<<endl;
+  cout <<"RVMnuit> "<< mjd<< " " <<min.UserState().Value("alpha")<<" "<<e0.first<<" "<<e0.second <<" "<<min.UserState().Value("beta")<< " "<<e1.first<<" "<<e1.second<<" " <<min.UserState().Value("phi0")<<" "<<e2.first<<" "<<e2.second <<" "<<min.UserState().Value("psi0")<<" "<<e3.first<<" "<<e3.second<< " "<<min.Fval()/(phase.size() - 4 - 1)<<endl;
 
-  printf("Latex> %.1f \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& %.1f \& %d  \n", mjd,
+  printf("RVMnuit-tex> %.1f \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& %.1f \& %d  \n", mjd,
 	min.UserState().Value("alpha"), e0.first, e0.second,
 	min.UserState().Value("beta"), e1.first, e1.second,
 	min.UserState().Value("phi0"), e2.first, e2.second,
@@ -263,7 +251,9 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
   cout << "chi**2: " << min.Fval() << endl;
   printf("chi**2: %.14f\n", min.Fval());
 
-  write_results(filename, mjd, archive->get_nbin(), rmsI.get_value(), integration->get_Profile(0,0)->get_amps(), integration->get_Profile(1,0)->get_amps(), integration->get_Profile(2,0)->get_amps(), integration->get_Profile(3,0)->get_amps(), phase_bin, Q, U, min.UserState().Value("alpha"), min.UserState().Value("beta"), min.UserState().Value("phi0"), min.UserState().Value("psi0"));
+  if (output) {
+      write_results(filename, mjd, archive->get_nbin(), rmsI.get_value(), integration->get_Profile(0,0)->get_amps(), integration->get_Profile(1,0)->get_amps(), integration->get_Profile(2,0)->get_amps(), integration->get_Profile(3,0)->get_amps(), phase_bin, Q, U, min.UserState().Value("alpha"), min.UserState().Value("beta"), min.UserState().Value("phi0"), min.UserState().Value("psi0"));
+  }
 
   return 0;
 }
