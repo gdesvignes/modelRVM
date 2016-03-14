@@ -1,0 +1,35 @@
+[multinest]
+IS=0
+nlive=4000
+ceff=1
+efr=0.02
+basename=results/chains-
+
+[config]
+threshold=0.5
+
+# Include individual EFAC for the profiles
+have_efac=0
+
+# Margin over Phi0
+margin_phi0=0
+
+[params]
+alpha=98;100
+delta=45;130
+Phi0=210;320
+
+# Phase range of individual RVM in degrees
+phi0=3;9.5
+
+# EFAC
+efac=0.4;4
+
+# Inclination angle in degrees
+inc_fixed=1
+inc=0.0;180.0
+
+# Precession rate
+prate_fixed=1
+prate=0.2;8.0
+
