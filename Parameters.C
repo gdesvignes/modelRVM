@@ -7,6 +7,8 @@
 int readParameters(param *p, char *paramFile){
     GKeyFile* gkf; /* Notice we declared a pointer */
 
+    char string[32];
+
     gkf = g_key_file_new();
     gsize length;
 
@@ -35,6 +37,16 @@ int readParameters(param *p, char *paramFile){
     p->prate_fixed = g_key_file_get_integer(gkf,"params","prate_fixed", NULL);
     p->prate = g_key_file_get_double_list(gkf,"params","prate", &length, NULL);
     p->efac = g_key_file_get_double_list(gkf,"params","efac", &length, NULL);
+
+    // Read the range of phases to be excluded
+    p->numfiles = g_key_file_get_integer(gkf,"data","numfiles", NULL);
+    p->phs_exclude = (double **) malloc( p->numfiles * sizeof(double *));
+    p->n_phs_exclude = (int *) malloc( p->numfiles * sizeof(int));
+    for (int i=0; i < p->numfiles; i++) {
+	sprintf(string, "phs_exclude_%d", i);
+	p->phs_exclude[i] = g_key_file_get_double_list(gkf,"data", string, &length, NULL);
+	p->n_phs_exclude[i] = length / 2;
+    }
 
     fprintf (stderr, "Finished reading config file %s\n", paramFile);
 

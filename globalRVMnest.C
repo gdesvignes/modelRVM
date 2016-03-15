@@ -186,40 +186,23 @@ int main(int argc, char *argv[])
 
 	double mjd = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
 
-
-	// 1906 Specific
 	double max_L=0.;
         double ph=0.;
-#if 0
-	double ex1l = .0575683, ex1h=0.51;
-	double ex2l = 0.58588, ex2h=1.;
-        double ex3l = 0.0, ex3h=0.03;
+	bool skip_bin = false;
 
-	if ( mjd > 54300) {ex1h = .5341;}
-	if ( mjd > 54400 && mjd < 54480) {ex2l = .57; ex1h= 0.5439;}
-	if  ( mjd > 54200 && mjd < 54300) { ex1l = 0.052; ex1h = .533; ex2l = 0.5776;}
-	if  ( mjd > 54150 && mjd < 54200) { ex1h = .52417;}
-#endif
-
-
-	double ex1l = .013867128125, ex1h=.470;
-	double ex2l = .542178828125, ex2h=.986787109375;
-
-	if (mjd < 54700) {ex1l = .0111;}
-	if (mjd > 53700) {ex1h = .480;}
-	if (mjd > 54300) {ex1h = .490398828125;}
-	if (mjd > 54150 && mjd < 54200) { ex1h = .480468828125;}
-	if (mjd > 54200 && mjd < 54300) { ex1l = .008298828125; ex1h = .49298828125; ex2l = .533898828125; ex2h = .99; }
-	if (mjd > 54400 && mjd < 54480) {ex2l = .527298828125; ex1h = .498099499499; ex2h = .9888; ex1l = 0.0138;}
-	if (mjd > 55000) {ex1h = .494; ex2l=0.549;}
-
-
+	for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
+            cout << "File #" << i << " : will exclude phase " << p.phs_exclude[i][nphs*2] << " to " <<  p.phs_exclude[i][1 + nphs*2] << endl;
 
 	for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
             ph = ibin/(double) archive->get_nbin();
+
             // Exclude phase range
-            if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
-            //if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h) || (ex3l <= ph && ph <= ex3h)) continue;
+            skip_bin = false;
+	    for (int nphs=0; nphs < p.n_phs_exclude[i]; nphs++)
+		if (p.phs_exclude[i][nphs*2] <= ph && ph <= p.phs_exclude[i][1 + nphs*2]) skip_bin = true;
+	
+	    if (skip_bin) continue;
+            
 	    if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
 		phase[i].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
 		I[i].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
@@ -231,7 +214,7 @@ int main(int argc, char *argv[])
 		//if (L.back() > max_L) max_L = L.back();
 	    }
 	}
-	cout << "Size " << I[i].size() << endl;
+	cout << "Number of data points " << I[i].size() << endl;
 
 	MJD.push_back(integration->get_epoch().in_days());
 	RMS_Q.push_back(rmsQ.get_value());
@@ -276,7 +259,7 @@ int main(int argc, char *argv[])
 
 	
 	// calling MultiNest
-
+	cout << endl << " -- Parameters -- " << endl;
 	cout << "Inc fixed   = " << inc_fixed << endl;
 	cout << "Prate fixed = " << prate_fixed << endl;
 	cout << "Have EFAC   = " << have_efac << endl;

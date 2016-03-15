@@ -23,6 +23,11 @@ typedef struct param {
     int prate_fixed;
     double *prate;
 
+    // Data
+    int numfiles;
+    double **phs_exclude;
+    int *n_phs_exclude;
+
 } param;
 
 int readParameters(param *p, char *paramFile);
