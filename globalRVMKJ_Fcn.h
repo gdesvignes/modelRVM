@@ -16,7 +16,7 @@ public:
 
   //RVM_Fcn() : theErrorDef(1.) {}
 
-  RVM_Fcn(double **phase, double **Q,  double **U, double *Q_err, double *U_err)
+  RVM_Fcn(vector<vector<double> >  phase, vector<vector<double> >  Q, vector<vector<double> >  U, vector<double>  Q_err, vector<double> U_err)
   		: fPhase(phase), polQ(Q), polU(U), varQ(Q_err), varU(U_err), theErrorDef(1.) {}
 
   virtual ~RVM_Fcn() {}
@@ -109,13 +109,11 @@ public:
 private:
 
   // Data passed to the function
-  double **fPhase;
-  double **polQ;
-  double **polU;
-
-  
-  double *varQ;
-  double *varU;
+  vector<vector<double> > fPhase;
+  vector<vector<double> > polQ;
+  vector<vector<double> > polU;
+  vector<double> varQ;
+  vector<double> varU;
 
   double theErrorDef;
 
