@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
   };
 
   int opt, opti;
-  while ((opt=getopt_long(argc,argv,"t:a:b:p:z:ABPZhf:",long_opts,&opti))!=-1) {
+  while ((opt=getopt_long(argc,argv,"t:a:b:p:z:ABPZohf:",long_opts,&opti))!=-1) {
       switch (opt) {
           case 't':
               threshold = atof(optarg);
