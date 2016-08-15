@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 	par->inc_fixed = inc_fixed;
 	par->prate_fixed = prate_fixed;
 	par->inc = 43.7 * M_PI / 180.;
-	par->prate = 2.18;
+	par->prate = 2.234;
 	par->have_efac = have_efac;
 	par->margin_phi0 = margin_phi0;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
