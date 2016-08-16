@@ -38,7 +38,7 @@ AC_DEFUN([SWIN_LIB_MINUIT],
   ac_save_CXXFLAGS="$CXXFLAGS"
   ac_save_LIBS="$LIBS"
 
-  MINUIT_LIBS="$MINUIT_LIBS -lMinuit2 -fopenmp"
+  MINUIT_LIBS="$MINUIT_LIBS -lMinuit2"
 
   LIBS="$ac_save_LIBS $MINUIT_LIBS"
   CFLAGS="$ac_save_CFLAGS $MINUIT_CFLAGS"
