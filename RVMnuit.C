@@ -140,7 +140,10 @@ int main(int argc, char **argv) {
   /* 1906 - specific */
   double ex1l = .013867128125, ex1h=.470;
   double ex2l = .542178828125, ex2h=.986787109375;
-
+  double ex3l, ex3h;
+  ex1l = 0.0; ex1h=.25;
+  ex2l = 0.39; ex2h = 0.78;
+  ex3l = 0.92; ex3h = 1.0;
   double mjd = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
 
 #if 0
@@ -160,10 +163,10 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
 
   for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
       ph = ibin/(double) archive->get_nbin();
-#if 0
-      if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
-#endif
-      //if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h) || (ex3l <= ph && ph <= ex3h)) continue;
+
+      //if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
+      if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h) || (ex3l <= ph && ph <= ex3h)) continue;
+
       if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
         phase.push_back((ibin+.5)*(2*M_PI/(double)archive->get_nbin()));
         phase_bin.push_back(ibin);
@@ -173,7 +176,7 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
         V.push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
 	L.push_back( sqrt(U.back()*U.back() + Q.back()*Q.back()));
         //cout << totI[ibin] << " " << Q[ibin]<< " " << U[ibin]<<endl;
-        cout << ibin << " " <<totI.back() << " " << 0.5 * atan2(U.back(),  Q.back()) <<endl;
+        //cout << ibin << " " <<totI.back() << " " << 0.5 * atan2(U.back(),  Q.back()) <<endl;
 
 	if (L.back() > max_L) max_L = L.back();
       }
@@ -222,13 +225,13 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
   if (!psi0_fixed) e3 = Minos(3);
 
   
-  if (!alpha_fixed) cout<<"par0: "<<min.UserState().Value("alpha")<<" + "<<e0.first<<" "<<e0.second<<endl;
-  if (!beta_fixed) cout<<"par1: "<<min.UserState().Value("beta")<<" + "<<e1.first<<" "<<e1.second<<endl;
-  if (!phi0_fixed) cout<<"par2: "<<min.UserState().Value("phi0")<<" + "<<e2.first<<" "<<e2.second<<endl;
-  if (!psi0_fixed) cout<<"par3: "<<min.UserState().Value("psi0")<<" + "<<e3.first<<" "<<e3.second<<endl;
+  if (!alpha_fixed) cout<<"Alpha: "<<min.UserState().Value("alpha")<<" + "<<e0.first<<" "<<e0.second<<endl;
+  if (!beta_fixed) cout<<"Beta: "<<min.UserState().Value("beta")<<" + "<<e1.first<<" "<<e1.second<<endl;
+  if (!phi0_fixed) cout<<"Phi0: "<<min.UserState().Value("phi0")<<" + "<<e2.first<<" "<<e2.second<<endl;
+  if (!psi0_fixed) cout<<"Psi0: "<<min.UserState().Value("psi0")<<" + "<<e3.first<<" "<<e3.second<<endl;
 
 
-  {
+  if (!alpha_fixed and !beta_fixed) {
     // create contours factory with FCN and minimum
     MnContours contours(fFCN, min);
     //fFCN.setErrorDef(5.99);
@@ -239,14 +242,27 @@ if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
     plot(min.UserState().Value("alpha"), min.UserState().Value("beta"), cont4);
   }
 
-  cout <<"RVMnuit> "<< mjd<< " " <<min.UserState().Value("alpha")<<" "<<e0.first<<" "<<e0.second <<" "<<min.UserState().Value("beta")<< " "<<e1.first<<" "<<e1.second<<" " <<min.UserState().Value("phi0")<<" "<<e2.first<<" "<<e2.second <<" "<<min.UserState().Value("psi0")<<" "<<e3.first<<" "<<e3.second<< " "<<min.Fval()/(phase.size() - 4 - 1)<<endl;
-
+  cout <<"RVMnuit> "<< mjd<< " ";
+  if (!alpha_fixed) cout << min.UserState().Value("alpha")<<" "<<e0.first<<" "<<e0.second <<" ";
+  if (!beta_fixed)  cout << min.UserState().Value("beta")<< " "<<e1.first<<" "<<e1.second <<" ";
+  if (!phi0_fixed)  cout << min.UserState().Value("phi0")<<" "<<e2.first<<" "<<e2.second <<" ";
+  if (!psi0_fixed)  cout << min.UserState().Value("psi0")<<" "<<e3.first<<" "<<e3.second<< " ";
+  cout << min.Fval()/(phase.size() - 4 - 1)<<endl;
+  /*
   printf("RVMnuit-tex> %.1f \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& \$%.2f\_\{%.2f\}\^\{+%.2f\}\$ \& %.1f \& %d  \n", mjd,
 	min.UserState().Value("alpha"), e0.first, e0.second,
 	min.UserState().Value("beta"), e1.first, e1.second,
 	min.UserState().Value("phi0"), e2.first, e2.second,
 	min.UserState().Value("psi0"), e3.first, e3.second,
-	min.Fval(), phase.size());
+	min.Fval(), phase.size());*/
+
+  cout << "RVMnuit-tex> " << mjd << " ";
+  if (!alpha_fixed) cout <<"\& \$"<< min.UserState().Value("alpha")<<" \_\{ "<<e0.first<<"\}\^\{+ "<<e0.second <<"\}\$ ";
+  if (!beta_fixed)  cout <<"\& \$"<<  min.UserState().Value("beta")<< " \_\{  "<<e1.first<<"\}\^\{+  "<<e1.second <<"\}\$ ";
+  if (!phi0_fixed)  cout <<"\& \$"<<  min.UserState().Value("phi0")<<" \_\{  "<<e2.first<<"\}\^\{+  "<<e2.second <<"\}\$ ";
+  if (!psi0_fixed)  cout <<"\& \$"<<  min.UserState().Value("psi0")<<" \_\{  "<<e3.first<<"\}\^\{+  "<<e3.second<< "\}\$ ";
+  cout << min.Fval() << " "<< (phase.size())<<endl;
+
 
   cout << "chi**2: " << min.Fval() << endl;
   printf("chi**2: %.14f\n", min.Fval());
