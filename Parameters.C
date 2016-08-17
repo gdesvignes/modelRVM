@@ -33,9 +33,11 @@ int readParameters(param *p, char *paramFile){
     p->Phi0 = g_key_file_get_double_list(gkf,"params","Phi0", &length, NULL);
     p->phi0 = g_key_file_get_double_list(gkf,"params","phi0", &length, NULL);
     p->inc_fixed = g_key_file_get_integer(gkf,"params","inc_fixed", NULL);
-    p->inc = g_key_file_get_double_list(gkf,"params","inc", &length, NULL);
+    p->inc = g_key_file_get_double(gkf,"params","inc",NULL); // Read inclination in deg
+    p->r_inc = g_key_file_get_double_list(gkf,"params","r_inc", &length, NULL);
     p->prate_fixed = g_key_file_get_integer(gkf,"params","prate_fixed", NULL);
-    p->prate = g_key_file_get_double_list(gkf,"params","prate", &length, NULL);
+    p->prate = g_key_file_get_double(gkf,"params","prate",NULL);
+    p->r_prate = g_key_file_get_double_list(gkf,"params","r_prate", &length, NULL);
     p->efac = g_key_file_get_double_list(gkf,"params","efac", &length, NULL);
     p->psi_jump_MJD = g_key_file_get_double_list(gkf,"params","psi_jump_MJD", &length, NULL);
     p->njump = length;

@@ -19,9 +19,11 @@ typedef struct param {
     double *phi0;
     double *efac;
     int inc_fixed;
-    double *inc;
+    double inc;
+    double *r_inc;
     int prate_fixed;
-    double *prate;
+    double prate;
+    double *r_prate;
   int njump;
   double *psi_jump_MJD;
 

@@ -249,12 +249,14 @@ int main(int argc, char *argv[])
 	par->njump = 0;
 	// Copy the range of parameters
 	if (rv == EXIT_SUCCESS) {
+	  par->inc = p.inc * M_PI / 180.;
+	  par->prate = p.prate;
 	    par->r_alpha = p.alpha;
 	    par->r_delta = p.delta;
 	    par->r_Phi0 = p.Phi0;
 	    par->r_phi0 = p.phi0;
-	    par->r_inc = p.inc;
-	    par->r_prate = p.prate;
+	    par->r_inc = p.r_inc;
+	    par->r_prate = p.r_prate;
 	    par->r_efac = p.efac;
 
 	    if (p.njump) {
