@@ -122,21 +122,8 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	par->phi0[12] = 24.17391776309 * M_PI/180.;
 	par->margin_phi0 = 1;
 #endif
-	//sni = sin(inc);
-	//M = par->omdot * (1. - par->ecc*par->ecc) * r13 / (pow(TSUN,r23)) * pow((par->pb/(2*M_PI)),r53);
-	//M = pow(M, 1.5);
-	//exit(0);
 
 	par->omega = par->prate / 365.25 * DEG_TO_RAD;
-
-	/*
-	par->mc = pow((par->massfn*M*M),r13) / sini;
-	par->mp = M-par->mc;
-
-	par->omega = pow((2.0*M_PI/par->pb),r53) * pow(TSUN,r23) / (1.-par->ecc*par->ecc);
-	par->omega = par->omega * par->mc*(4.*par->mp+3.0*par->mc)/2.0/pow(M,r43);   // rad/sec
-	par->omega = par->omega * 86400.; // rad/day
-	*/
 
 	// Marginalize over Phi0
 	if (par->margin_phi0) {

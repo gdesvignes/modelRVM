@@ -19,14 +19,6 @@ typedef struct {
 	int have_efac;
 	int margin_phi0;
 
-        double a1;
-        double omdot;
-        double ecc;
-        double pb;              /* Orbital period */
-        double mp;              /* Pulsar Mass */
-        double mc;              /* Companion Mass */
-        double massfn;  /* Mass function */
-
         double alpha;   /*  par[0] */
         //double beta;
         //double xsi;

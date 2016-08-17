@@ -32,17 +32,6 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 		
 	cout << "Malloc finished" << endl;
 
-	// 1906 params
-	MNS->a1 = 1.420; // lt-s
-	MNS->pb = 0.1659930; // days
-	MNS->ecc = 0.08530;
-	MNS->omdot = 7.5841; // deg/yr
-	MNS->massfn = 0.111568;
-
-	// -- Tune the parameters --
-	MNS->pb *= 86400.0; // seconds
-	MNS->omdot *=  M_PI/180.0 / ( 86400. * 365.245 ); // rad/seconds
-	
 	cout << "Params finished" << endl;
 
 	return MNS;
