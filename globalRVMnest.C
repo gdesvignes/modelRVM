@@ -262,8 +262,6 @@ int main(int argc, char *argv[])
 	    if (p.njump) {
 	      par->njump = p.njump;
 	      par->psi_jump_MJD = p.psi_jump_MJD;
-	      for(int i = 0; i < par->njump; i++) 
-		cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
 	      ndims += p.njump;
 	      nPar += p.njump;
 	    }
@@ -279,7 +277,8 @@ int main(int argc, char *argv[])
 	cout << "Margin_phi0 = " << margin_phi0 << endl;
 	cout << "nlive = " << nlive << endl;
 	cout << "ndims = " << ndims << endl;
-
+	cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
+	for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
 	cout << "Assuming reading " << nfiles << " files" << endl; 
 	cout << "Basefilename " << root << endl; 
 
