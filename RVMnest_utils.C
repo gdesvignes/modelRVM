@@ -17,23 +17,18 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	MNS->epoch = (double *)malloc(nfiles * sizeof(double));
 	MNS->phi0 = (double *)malloc(nfiles * sizeof(double));
 
-	MNS->rmsQ = (double *)malloc(nfiles * sizeof(double));
-	MNS->rmsU = (double *)malloc(nfiles * sizeof(double));
-
-	MNS->phase = (double **)malloc(nfiles * sizeof(double *));
-	MNS->Q = (double **)malloc(nfiles * sizeof(double *));
-	MNS->U = (double **)malloc(nfiles * sizeof(double *));
-
+	MNS->rmsQ = rmsQ;
+	MNS->rmsU = rmsU;
+	MNS->phase = phase;
+	MNS->Q = Q;
+	MNS->U = U;
+	
+	
 	MNS->n_epoch = nfiles;
 	for (int i=0; i<nfiles; i++) {
 		MNS->npts[i] = phase[i].size(); // TBD 
 		cout << i << " "<<  nfiles << " "<<  MNS->npts[i] <<endl;
-		MNS->phase[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
-		MNS->Q[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
-		MNS->U[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
-		MNS->rmsQ[i] = rmsQ[i];
-		MNS->rmsU[i] = rmsU[i];
-	}
+       	}
 		
 	cout << "Malloc finished" << endl;
 
@@ -48,15 +43,6 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	MNS->pb *= 86400.0; // seconds
 	MNS->omdot *=  M_PI/180.0 / ( 86400. * 365.245 ); // rad/seconds
 	
-	// Assign data
-	for (int i=0; i<nfiles; i++) {
-	    for (int j=0; j<MNS->npts[i]; j++) {
-		MNS->phase[i][j] = phase[i][j]; // TBD
-		MNS->Q[i][j] = Q[i][j];
-		MNS->U[i][j] = U[i][j];
-	    }
-	}
-
 	cout << "Params finished" << endl;
 
 	return MNS;

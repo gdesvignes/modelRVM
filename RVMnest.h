@@ -40,12 +40,12 @@ typedef struct {
         double *phi0;  /* */
         double psi0;
 
-	double **phase;
-	double **Q;
-	double **U;
+  std::vector<std::vector<double> > phase;
+  std::vector<std::vector<double> >  Q;
+  std::vector<std::vector<double> >  U;
 
-	double *rmsQ;
-	double *rmsU;
+  std::vector<double> rmsQ;
+  std::vector<double> rmsU;
 	double *efac;
 
 	double *r_alpha;
@@ -55,7 +55,8 @@ typedef struct {
 	double *r_inc;
 	double *r_prate;
 	double *r_efac;
-
+  int njump;
+  double *psi_jump_MJD;
 
 } MNStruct;
 

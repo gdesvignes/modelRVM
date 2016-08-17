@@ -22,6 +22,8 @@ typedef struct param {
     double *inc;
     int prate_fixed;
     double *prate;
+  int njump;
+  double *psi_jump_MJD;
 
     // Data
     int numfiles;

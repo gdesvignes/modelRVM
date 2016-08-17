@@ -89,6 +89,15 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    for (unsigned int j = 0; j < par->n_epoch; j++) par->efac[j] = 1.;
 	}
 
+	double *psi_jumps;
+	psi_jumps = (double *) malloc(par->njump * sizeof(double));
+	if (par->njump) {
+	  for (unsigned  l=0; l<par->njump; l++) {
+	    psi_jumps[l] = Cube[npar] * 180.;
+	    npar++;
+	  }
+	}
+
 	double rmsQ;
 	double rmsU;
 
@@ -200,6 +209,11 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		//printf("%lf %lf %lf %lf  %lf %lf  %lf\n", alpha, xsi, phi0, psi0, par->Q[0][i], par->U[0][i], par->x[0][i]);
 		PA2 = 2*get_RVM(par->alpha, xsi, par->phi0[j], par->psi00 + eta, par->phase[j][i]);
 
+		// Take into account Psi Jumps
+		for(unsigned l=0; l<par->njump; l++) {
+		  if (par->epoch[j] > par->psi_jump_MJD[l]) PA2 += psi_jumps[l] ;
+		}
+
 		cosPA2 = cos(PA2);
 		sinPA2 = sin(PA2);
 
@@ -258,8 +272,16 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    }
 	}
 
+        if (par->njump) {
+          for (unsigned  l=0; l<par->njump; l++) {
+	    Cube[npar] = psi_jumps[l];
+            npar++;
+          }
+        }
+
 	//printf("%d ", npar);
 	//for (unsigned int j = 0; j < npar; j++) printf("%lf ", Cube[j]);
 	//printf("\n");
         lnew = -chi/2 - 0.5*logdetN;
+	free(psi_jumps);
 }

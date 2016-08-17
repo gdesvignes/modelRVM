@@ -37,6 +37,8 @@ int readParameters(param *p, char *paramFile){
     p->prate_fixed = g_key_file_get_integer(gkf,"params","prate_fixed", NULL);
     p->prate = g_key_file_get_double_list(gkf,"params","prate", &length, NULL);
     p->efac = g_key_file_get_double_list(gkf,"params","efac", &length, NULL);
+    p->psi_jump_MJD = g_key_file_get_double_list(gkf,"params","psi_jump_MJD", &length, NULL);
+    p->njump = length;
 
     // Read the range of phases to be excluded
     p->numfiles = g_key_file_get_integer(gkf,"data","numfiles", NULL);

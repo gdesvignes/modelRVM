@@ -245,7 +245,8 @@ int main(int argc, char *argv[])
 
 	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
 	pWrap[0] = 0; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
-	
+
+	par->njump = 0;
 	// Copy the range of parameters
 	if (rv == EXIT_SUCCESS) {
 	    par->r_alpha = p.alpha;
@@ -255,6 +256,13 @@ int main(int argc, char *argv[])
 	    par->r_inc = p.inc;
 	    par->r_prate = p.prate;
 	    par->r_efac = p.efac;
+
+	    if (p.njump) {
+	      par->njump = p.njump;
+	      par->psi_jump_MJD = p.psi_jump_MJD;
+	      ndims += p.njump;
+	      nPar += p.njump;
+	    }
 	}
 
 	
