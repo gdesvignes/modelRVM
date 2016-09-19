@@ -63,7 +63,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		npar++;
 	    }
 	} else {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) par->phi0[j] = 5.0 * M_PI/180.;
+	    for (unsigned int j = 0; j < par->n_epoch; j++) par->phi0[j] = 5.0 * DEG_TO_RAD;
 	}
 
 	// Precession rate
@@ -89,11 +89,12 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    for (unsigned int j = 0; j < par->n_epoch; j++) par->efac[j] = 1.;
 	}
 
+	// Psi0 jumps between different datasets
 	double *psi_jumps;
 	psi_jumps = (double *) malloc(par->njump * sizeof(double));
 	if (par->njump) {
 	  for (unsigned  l=0; l<par->njump; l++) {
-	    psi_jumps[l] = Cube[npar] * 180.;
+	    psi_jumps[l] = Cube[npar] * M_PI - M_PI/2.;
 	    npar++;
 	  }
 	}
@@ -101,34 +102,27 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	double rmsQ;
 	double rmsU;
 
-	// Test check
-#if 0
-	par->alpha = 99.0484141926 * M_PI/180.;
-	par->delta = 117.5365848921 * M_PI/180.;
-	par->phase0 = 230.8024672783 * M_PI/180.;
-	par->psi00 = 53.97486341145 * M_PI/180.;
-	par->phi0[0] = 18.96421428197 * M_PI/180.;
-	par->phi0[1] = 19.39861029502 * M_PI/180.;
-	par->phi0[2] = 19.60041431936 * M_PI/180.;
-	par->phi0[3] = 19.92786958068 * M_PI/180.;
-	par->phi0[4] = 20.19144456874 * M_PI/180.;
-	par->phi0[5] = 20.61378549792 * M_PI/180.;
-	par->phi0[6] = 20.82955408938 * M_PI/180.;
-	par->phi0[7] = 21.17505866282 * M_PI/180.;
-	par->phi0[8] = 21.32304445259 * M_PI/180.;
-	par->phi0[9] = 22.20055547289 * M_PI/180.;
-	par->phi0[10] = 22.34049877568 * M_PI/180.;
-	par->phi0[11] = 22.96195389531 * M_PI/180.;
-	par->phi0[12] = 24.17391776309 * M_PI/180.;
-	par->margin_phi0 = 1;
-#endif
+	vector<double> vrmsQ, vrmsU;
+	vector< vector<double> > vQ, vU, vphase;
+	vQ.resize(par->n_epoch); vU.resize(par->n_epoch); vphase.resize(par->n_epoch);
+
+	for(unsigned int j = 0; j < par->n_epoch; j++) {
+	  vrmsQ.push_back(par->rmsQ[j]);
+	  vrmsU.push_back(par->rmsU[j]);
+	  for(unsigned int i = 0; i < par->npts[j]; i++) {
+	    vQ[j].push_back(par->Q[j][i]);
+	    vU[j].push_back(par->U[j][i]);
+	    vphase[j].push_back(par->phase[j][i]);
+	  }
+	}
+
 
 	par->omega = par->prate / 365.25 * DEG_TO_RAD;
 
 	// Marginalize over Phi0
 	if (par->margin_phi0) {
 	    //RVM_Fcn fFCN();
-	    RVM_Fcn fFCN(par->phase, par->Q, par->U, par->rmsQ, par->rmsU);
+	    RVM_Fcn fFCN(vphase, vQ, vU, vrmsQ, vrmsU);
 	    fFCN.set_params(par);
 
 	    MnUserParameters upar;
@@ -150,7 +144,6 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
 
 	}
-	//exit(0);
 
 	for (unsigned int j = 0; j < par->n_epoch; j++) {
 
@@ -180,6 +173,10 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
             eta = atan2(sneta,cseta);
             //psi0 = eta;
+	    // Take into account Psi Jumps
+	    for(unsigned l=0; l<par->njump; l++) {
+	      if (par->epoch[j] > par->psi_jump_MJD[l]) eta += psi_jumps[l] ;
+	    }
 
 	    //printf("delta=%lf  inc=%lf  phi=%lf\n", par->delta * 180./M_PI, par->inc * 180./M_PI, phi);
 	    //printf("%2d  epoch=%lf  lambda=%lf  beta=%lf  eta=%lf\n", j, par->epoch[j], lambda * 180./M_PI, beta * 180./M_PI, eta * 180./M_PI);
@@ -196,11 +193,6 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		//printf("%lf %lf %lf %lf  %lf %lf  %lf\n", alpha, xsi, phi0, psi0, par->Q[0][i], par->U[0][i], par->x[0][i]);
 		PA2 = 2*get_RVM(par->alpha, xsi, par->phi0[j], par->psi00 + eta, par->phase[j][i]);
 
-		// Take into account Psi Jumps
-		for(unsigned l=0; l<par->njump; l++) {
-		  if (par->epoch[j] > par->psi_jump_MJD[l]) PA2 += psi_jumps[l] ;
-		}
-
 		cosPA2 = cos(PA2);
 		sinPA2 = sin(PA2);
 
@@ -216,11 +208,8 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		logdetN += log(Uu) + log(Qu);
 		
 		Ltot += Ln;
-	        //printf("%d %lf %lf\n", i,par->phase[0][i], PA);
 	    }	
 	}
-	//printf("chi = %lf\n", chi);
-	//exit(0);
 
 	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
 	if (Ltot < 0.0) {
@@ -261,14 +250,11 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
         if (par->njump) {
           for (unsigned  l=0; l<par->njump; l++) {
-	    Cube[npar] = psi_jumps[l];
+	    Cube[npar] = psi_jumps[l] * RAD_TO_DEG;
             npar++;
           }
         }
 
-	//printf("%d ", npar);
-	//for (unsigned int j = 0; j < npar; j++) printf("%lf ", Cube[j]);
-	//printf("\n");
         lnew = -chi/2 - 0.5*logdetN;
 	free(psi_jumps);
 }
