@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <string>
+#include <sstream>
 #include "multinest.h"
 #include "Parameters.h"
 #include "RVMnest.h"
@@ -158,7 +160,14 @@ int main(int argc, char *argv[])
 	L.resize(nfiles);	
 
 	// Process and read files
+	stringstream s;
+	string fn="file";
 	for (unsigned i=0; i<nfiles; i++) {
+	  s.str("");
+	  s << fn << i;
+	  string result = s.str();
+	  ofstream myf;
+	  myf.open(result.c_str());
 
 	Reference::To< Archive > archive = Archive::load( argv[i+1] );
 	cout << "Opening " << argv[i+1] << endl;
@@ -210,7 +219,7 @@ int main(int argc, char *argv[])
 		U[i].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
 		L[i].push_back( sqrt(U[i].back()*U[i].back() + Q[i].back()*Q[i].back()));
 
-		//cout << ibin << " " <<I.back() << " " << 0.5 * atan(U.back(),  Q.back()) <<endl;
+		myf << ibin << " " <<I[i].back() << " " << 0.5 * atan(U[i].back()/  Q[i].back()) * 180./ M_PI<< " " <<28.65 * rmsI.get_value()/L[i].back()<< endl;
 		//if (L.back() > max_L) max_L = L.back();
 	    }
 	}
@@ -220,6 +229,7 @@ int main(int argc, char *argv[])
 	RMS_Q.push_back(rmsQ.get_value());
 	RMS_U.push_back(rmsU.get_value());
 	//cout << MJD.back() << endl;
+	myf.close();
 	}
 
 
@@ -271,7 +281,9 @@ int main(int argc, char *argv[])
 	// calling MultiNest
 	cout << endl << " -- Parameters -- " << endl;
 	cout << "Inc fixed   = " << inc_fixed << endl;
+	if (prate_fixed) cout << "Inclination angle (deg) = " << par->inc * 180./M_PI<< endl;
 	cout << "Prate fixed = " << prate_fixed << endl;
+	if (prate_fixed) cout << "Prate (deg/yr) = " << par->prate << endl;
 	cout << "Have EFAC   = " << have_efac << endl;
 	cout << "Threshold   = " << threshold << endl;
 	cout << "Margin_phi0 = " << margin_phi0 << endl;
