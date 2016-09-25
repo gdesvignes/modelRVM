@@ -6,7 +6,7 @@
 
 using namespace std;
 
-MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector<double> > Q, vector< vector<double> > U, vector<double> rmsQ, vector<double> rmsU) {
+MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector<double> > I, vector< vector<double> > Q, vector< vector<double> > U, vector<double> rmsI, vector<double> rmsQ, vector<double> rmsU, vector<int> &nbin, int njump) {
 
 	// Init struct
 	MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
@@ -17,16 +17,42 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	MNS->epoch = (double *)malloc(nfiles * sizeof(double));
 	MNS->phi0 = (double *)malloc(nfiles * sizeof(double));
 
-	MNS->rmsQ = rmsQ;
-	MNS->rmsU = rmsU;
-	MNS->phase = phase;
-	MNS->Q = Q;
-	MNS->U = U;
+	MNS->Q = (double **)malloc(nfiles * sizeof(double *));
+	MNS->U = (double **)malloc(nfiles * sizeof(double *));
+	MNS->phase = (double **)malloc(nfiles * sizeof(double *));
+	MNS->rmsQ = (double *)malloc(nfiles * sizeof(double));
+	MNS->rmsU = (double *)malloc(nfiles * sizeof(double));
+
+
+	MNS->I = (double **)malloc(nfiles * sizeof(double *));
+	MNS->rmsI = (double *)malloc(nfiles * sizeof(double));
+	MNS->nbin = (int *)malloc(nfiles * sizeof(int));
+
+	MNS->psi_jumps = (double *) malloc(njump * sizeof(double));
 	
 	
 	MNS->n_epoch = nfiles;
 	for (int i=0; i<nfiles; i++) {
+	  MNS->efac[i] = 1.;
 		MNS->npts[i] = phase[i].size(); // TBD 
+		MNS->rmsQ[i] = rmsQ[i];
+		MNS->rmsU[i] = rmsU[i];
+		MNS->rmsI[i] = rmsI[i];
+		MNS->nbin[i] = nbin[i];
+		MNS->phase[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
+		MNS->Q[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
+		MNS->U[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
+
+		MNS->I[i] = (double *)malloc(MNS->nbin[i] * sizeof(double));
+
+		for (int j=0; j<MNS->npts[i]; j++) {
+		  MNS->phase[i][j] = phase[i][j];
+		  MNS->Q[i][j] = Q[i][j];
+		  MNS->U[i][j] = U[i][j];
+		}
+		for (int j=0; j<MNS->nbin[i]; j++) {
+		  MNS->I[i][j] = I[i][j];
+		}
 		cout << i << " "<<  nfiles << " "<<  MNS->npts[i] <<endl;
        	}
 		
@@ -37,12 +63,12 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	return MNS;
 }
 
-double get_RVM(const double &alpha, const double &xsi, const double &phi0, const double &psi0, const double &x) {
+double get_RVM(const double &alpha, const double &beta, const double &phi0, const double &psi0, const double &x) {
 
-    //printf("%lf %lf %lf %lf %lf\n", alpha, xsi, phi0, psi0, x);
+    //printf("%lf %lf %lf %lf %lf\n", alpha, beta, phi0, psi0, x);
 
     double k1 = sin(alpha)*sin(x-phi0);
-    double k2 = sin(xsi)*cos(alpha)-cos(xsi)*sin(alpha)*cos(x-phi0);
+    double k2 = sin(alpha+beta)*cos(alpha)-cos(alpha+beta)*sin(alpha)*cos(x-phi0);
     double PA = -atan(k1/k2) + psi0;
     return  PA;
 }

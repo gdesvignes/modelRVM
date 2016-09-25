@@ -9,6 +9,8 @@
 #include "multinest.h"
 #include "Parameters.h"
 #include "RVMnest.h"
+#include "read_MN_results.h"
+
 
 // psrchive stuff
 #include "Pulsar/Archive.h"
@@ -151,93 +153,95 @@ int main(int argc, char *argv[])
 	}
 
 
+	vector <int> nbin;
 	vector< vector<double> > phase, I, Q, U, L;
-	vector <double> RMS_Q, RMS_U, MJD;
+	vector <double> RMS_I, RMS_Q, RMS_U, MJD;
 	phase.resize(nfiles);	
 	I.resize(nfiles);	
 	Q.resize(nfiles);	
 	U.resize(nfiles);	
-	L.resize(nfiles);	
+	L.resize(nfiles);
 
 	// Process and read files
-	stringstream s;
-	string fn="file";
+	//stringstream s;
+	//string fn="file";
 	for (unsigned i=0; i<nfiles; i++) {
-	  s.str("");
-	  s << fn << i;
-	  string result = s.str();
-	  ofstream myf;
-	  myf.open(result.c_str());
 
-	Reference::To< Archive > archive = Archive::load( argv[i+1] );
-	cout << "Opening " << argv[i+1] << endl;
-	if( !archive ) return -1;
+	  Reference::To< Archive > archive = Archive::load( argv[i+1] );
+	  cout << "Opening " << argv[i+1] << endl;
+	  if( !archive ) return -1;
 
-	// correct PA to infinite frequency
-	FaradayRotation xform;
-	xform.set_reference_wavelength( 0 );
-	xform.set_measure( archive->get_rotation_measure() );
-	xform.execute( archive );
-
-	// Scrunch and Remove baseline
-	archive->tscrunch();
-	archive->fscrunch();
-	if( archive->get_state() != Signal::Stokes) archive->convert_state(Signal::Stokes);
-	archive->remove_baseline();
-
-	// Get Data
-	Pulsar::Integration* integration = archive->get_Integration(0);
-	Pulsar::PolnProfileStats stats;
-	stats.set_profile(integration->new_PolnProfile(0));
-	Estimate<double> rmsI = sqrt( stats.get_baseline_variance(0) );
-	Estimate<double> rmsQ = sqrt( stats.get_baseline_variance(1) );
-	Estimate<double> rmsU = sqrt( stats.get_baseline_variance(2) );
-
-	double mjd = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
-
-	double max_L=0.;
-        double ph=0.;
-	bool skip_bin = false;
-
-	for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
+	  nbin.push_back(archive->get_nbin());
+	  cout << "  nbin : " << nbin.back()<<endl;
+	  // correct PA to infinite frequency
+	  FaradayRotation xform;
+	  xform.set_reference_wavelength( 0 );
+	  xform.set_measure( archive->get_rotation_measure() );
+	  xform.execute( archive );
+	  
+	  // Scrunch and Remove baseline
+	  archive->tscrunch();
+	  archive->fscrunch();
+	  if( archive->get_state() != Signal::Stokes) archive->convert_state(Signal::Stokes);
+	  archive->remove_baseline();
+	  
+	  // Get Data
+	  Pulsar::Integration* integration = archive->get_Integration(0);
+	  Pulsar::PolnProfileStats stats;
+	  stats.set_profile(integration->new_PolnProfile(0));
+	  Estimate<double> rmsI = sqrt( stats.get_baseline_variance(0) );
+	  Estimate<double> rmsQ = sqrt( stats.get_baseline_variance(1) );
+	  Estimate<double> rmsU = sqrt( stats.get_baseline_variance(2) );
+	  
+	  double mjd = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
+	  
+	  double max_L=0.;
+	  double ph=0.;
+	  bool skip_bin = false;
+	  
+	  for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
             cout << "File #" << i << " : will exclude phase " << p.phs_exclude[i][nphs*2] << " to " <<  p.phs_exclude[i][1 + nphs*2] << endl;
-
-	for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
+	  
+	  for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
             ph = ibin/(double) archive->get_nbin();
-
+	
+	    // Add all points to I vector
+	    I[i].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
+	    
             // Exclude phase range
             skip_bin = false;
 	    for (int nphs=0; nphs < p.n_phs_exclude[i]; nphs++)
-		if (p.phs_exclude[i][nphs*2] <= ph && ph <= p.phs_exclude[i][1 + nphs*2]) skip_bin = true;
-	
+	      if (p.phs_exclude[i][nphs*2] <= ph && ph <= p.phs_exclude[i][1 + nphs*2]) skip_bin = true;
+	    
 	    if (skip_bin) continue;
             
 	    if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
-		phase[i].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
-		I[i].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
-		Q[i].push_back(integration->get_Profile(1,0)->get_amps()[ibin]);
-		U[i].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
-		L[i].push_back( sqrt(U[i].back()*U[i].back() + Q[i].back()*Q[i].back()));
-
-		myf << ibin << " " <<I[i].back() << " " << 0.5 * atan(U[i].back()/  Q[i].back()) * 180./ M_PI<< " " <<28.65 * rmsI.get_value()/L[i].back()<< endl;
-		//if (L.back() > max_L) max_L = L.back();
+	      phase[i].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
+	      //I[i].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
+	      Q[i].push_back(integration->get_Profile(1,0)->get_amps()[ibin]);
+	      U[i].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
+	      L[i].push_back( sqrt(U[i].back()*U[i].back() + Q[i].back()*Q[i].back()));
+	      
+	      //myf << ibin << " " <<I[i].back() << " " << 0.5 * atan(U[i].back()/  Q[i].back()) * 180./ M_PI<< " " <<28.65 * rmsI.get_value()/L[i].back()<< endl;
+	      //if (L.back() > max_L) max_L = L.back();
 	    }
+	  }
+	  cout << "Number of data points " << Q[i].size() << endl;
+	  
+	  MJD.push_back(integration->get_epoch().in_days());
+	  RMS_I.push_back(rmsI.get_value());
+	  RMS_Q.push_back(rmsQ.get_value());
+	  RMS_U.push_back(rmsU.get_value());
+	  //cout << MJD.back() << endl;
+	  //myf.close();
 	}
-	cout << "Number of data points " << I[i].size() << endl;
-
-	MJD.push_back(integration->get_epoch().in_days());
-	RMS_Q.push_back(rmsQ.get_value());
-	RMS_U.push_back(rmsU.get_value());
-	//cout << MJD.back() << endl;
-	myf.close();
-	}
-
-
+	
+	
 	// Init struct
-	context = init_struct(nfiles, phase , Q, U, RMS_Q, RMS_U);
+	context = init_struct(nfiles, phase , I, Q, U, RMS_I, RMS_Q, RMS_U, nbin, p.njump);
 
 	MNStruct *par = ((MNStruct *)context);
-
+	
 	par->inc_fixed = inc_fixed;
 	par->prate_fixed = prate_fixed;
 	par->inc = 43.7 * M_PI / 180.;
@@ -276,7 +280,7 @@ int main(int argc, char *argv[])
 	      nPar += p.njump;
 	    }
 	}
-
+	par->do_plot = 0;
 	
 	// calling MultiNest
 	cout << endl << " -- Parameters -- " << endl;
@@ -294,9 +298,15 @@ int main(int argc, char *argv[])
 	cout << "Assuming reading " << nfiles << " files" << endl; 
 	cout << "Basefilename " << root << endl; 
 
-	//exit(0);
 	nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
 	logZero, maxiter, globalRVMLogLike, dumper, context);
+
+
+
+	// Read results from stats file
+	read_stats(root, nPar, par);
+	get_globalRVM_chi2(par);
+
 }
 
 /***********************************************************************************************************************/

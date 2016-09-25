@@ -33,7 +33,7 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	complex <double> L, arg;
 
 	double alpha = Cube[0];
-	double xsi = Cube[1];
+	double beta = Cube[1];
 	double phi0 = Cube[2];
 	double psi0 = Cube[3];
 
@@ -43,7 +43,7 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	double rmsU = par->rmsU[0];
 
 	alpha *= M_PI;
-	xsi *= M_PI;
+	beta = beta*M_PI - M_PI/2.;
 	//phi0 *=  2*M_PI;
 	phi0 =  phi0*M_PI + M_PI/2. ;
 	psi0 = psi0*M_PI - M_PI/2.;
@@ -67,7 +67,7 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 
 	for(unsigned int i = 0; i < par->npts[0]; i++) {
 		//printf("%lf %lf %lf %lf  %lf %lf  %lf\n", alpha, xsi, phi0, psi0, par->Q[0][i], par->U[0][i], par->x[0][i]);
-		PA = get_RVM(alpha, xsi, phi0, psi0, par->phase[0][i]);
+		PA = get_RVM(alpha, beta, phi0, psi0, par->phase[0][i]);
 		Ln = (par->Q[0][i]*cos(2*PA) / (rmsQ*rmsQ) + par->U[0][i]*sin(2*PA) / (rmsU*rmsU)) 
 			/ (cos(2*PA)*cos(2*PA) / (rmsQ*rmsQ) + sin(2*PA)*sin(2*PA) / (rmsU*rmsU));
 
@@ -87,7 +87,7 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 
 	
 	Cube[0] *= 180;
-	Cube[1] *= 180;
+	Cube[1] = Cube[1]*180. - 90.;
 	//Cube[2] *= 2*180.;
 	Cube[2] = Cube[2]*180. + 90.;
 	Cube[3] = psi0 * 180. / M_PI;

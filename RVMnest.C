@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
 	
 	int IS = 0;					// do Nested Importance Sampling?
 	int mmodal = 1;					// do mode separation?
-	int ceff = 0;					// run in constant efficiency mode?
-	int nlive = 4000;				// number of live points
-	double efr = 0.2;				// set the required efficiency
+	int ceff = 1;					// run in constant efficiency mode?
+	int nlive = 2000;				// number of live points
+	double efr = 0.02;				// set the required efficiency
 	double tol = 0.5;				// tol, defines the stopping criteria
 	int ndims = 4;					// dimensionality (no. of free parameters)
 	int nPar = 4;					// total no. of parameters including free & derived parameters
@@ -111,11 +111,12 @@ int main(int argc, char *argv[])
 							// has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 
-	double threshold=3.;
+	double threshold=1.5;
 	int nfiles = 1;
 	vector< vector<double> > phase, I, Q, U, L;
 
-	vector <double> RMS_Q, RMS_U;
+	vector <int> nbin;
+	vector <double> RMS_I, RMS_Q, RMS_U;
 
 	strcpy(filename, argv[1]);
 
@@ -150,7 +151,15 @@ int main(int argc, char *argv[])
 
 	double max_L=0.;
 
+	double ph;
+	double ex1l, ex1h, ex2l, ex2h;
+	ex1l = 0.05; ex1h=.43;ex2l = 0.6; ex2h = 0.95;
+
+	nbin.push_back(archive->get_nbin());
+
 	for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
+	    ph = ibin/(double) archive->get_nbin();
+	    if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
 	    if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
 		phase[0].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
 		I[0].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
@@ -163,12 +172,13 @@ int main(int argc, char *argv[])
 	    }
 	}
 
+	RMS_I.push_back(rmsI.get_value());
 	RMS_Q.push_back(rmsQ.get_value());
 	RMS_U.push_back(rmsU.get_value());
 
 	// Init struct
-	context = init_struct(nfiles, phase , Q, U, RMS_Q, RMS_U);
-		
+	context = init_struct(nfiles, phase , I, Q, U, RMS_I, RMS_Q, RMS_U, nbin, 0);
+		 
 	
 
 	

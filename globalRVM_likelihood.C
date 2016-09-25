@@ -90,11 +90,10 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	}
 
 	// Psi0 jumps between different datasets
-	double *psi_jumps;
-	psi_jumps = (double *) malloc(par->njump * sizeof(double));
+	//par->psi_jumps = (double *) malloc(par->njump * sizeof(double));
 	if (par->njump) {
 	  for (unsigned  l=0; l<par->njump; l++) {
-	    psi_jumps[l] = Cube[npar] * M_PI - M_PI/2.;
+	    par->psi_jumps[l] = Cube[npar] * M_PI;
 	    npar++;
 	  }
 	}
@@ -116,8 +115,6 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	  }
 	}
 
-
-	par->omega = par->prate / 365.25 * DEG_TO_RAD;
 
 	// Marginalize over Phi0
 	if (par->margin_phi0) {
@@ -145,74 +142,10 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
 	}
 
-	for (unsigned int j = 0; j < par->n_epoch; j++) {
-
-	    dt = par->epoch[j] - par->epoch[0];
-
-	    // -- compute beta and psi first --
-	    phi = par->phase0 + par->omega * dt; // in rad
-	    csdel = cos(par->delta);
-	    sndel = sin(par->delta);
-
-	    csi = cos(par->inc);
-	    sni = sin(par->inc);
-	    csphi = cos(phi);
-	    snphi = sin(phi);
-
-	    cslam = csdel * csi - sndel*sni*csphi;
-	    snlam = sqrt(1.0-cslam*cslam);
-
-	    //  as 0 < lambda < 180, sin(lambda) >0
-	    //  hence we can just compute acos(cos(lambda))
-
-	    lambda = acos(cslam);
-	    beta = M_PI - par->alpha - lambda;
-
-            cseta = sndel*snphi/snlam;
-            sneta = (cslam*csi-csdel)/sni/snlam;
-
-            eta = atan2(sneta,cseta);
-            //psi0 = eta;
-	    // Take into account Psi Jumps
-	    for(unsigned l=0; l<par->njump; l++) {
-	      if (par->epoch[j] > par->psi_jump_MJD[l]) eta += psi_jumps[l] ;
-	    }
-
-	    //printf("delta=%lf  inc=%lf  phi=%lf\n", par->delta * 180./M_PI, par->inc * 180./M_PI, phi);
-	    //printf("%2d  epoch=%lf  lambda=%lf  beta=%lf  eta=%lf\n", j, par->epoch[j], lambda * 180./M_PI, beta * 180./M_PI, eta * 180./M_PI);
-
-	    rmsQ = par->rmsQ[j];
-	    rmsU = par->rmsU[j];
-
-	    xsi = par->alpha + beta;
-	    
-	    Qu = rmsQ*rmsQ*par->efac[j]*par->efac[j];
-	    Uu = rmsU*rmsU*par->efac[j]*par->efac[j];
-
-	    for(unsigned int i = 0; i < par->npts[j]; i++) {
-		//printf("%lf %lf %lf %lf  %lf %lf  %lf\n", alpha, xsi, phi0, psi0, par->Q[0][i], par->U[0][i], par->x[0][i]);
-		PA2 = 2*get_RVM(par->alpha, xsi, par->phi0[j], par->psi00 + eta, par->phase[j][i]);
-
-		cosPA2 = cos(PA2);
-		sinPA2 = sin(PA2);
-
-		Ln = (par->Q[j][i]*cosPA2 / (Qu) + par->U[j][i]*sinPA2 / (Uu)) 
-			/ (cosPA2*cosPA2 / (Qu) + sinPA2*sinPA2 / (Uu));
-
-		//arg = 1i * PA2;
-		arg = std::complex<double>(0., PA2);
-		L =  Ln * exp (arg);
-		chi += (par->Q[j][i]-real(L))*(par->Q[j][i]-real(L))/(Qu)
-			+ (par->U[j][i]-imag(L))*(par->U[j][i]-imag(L))/(Uu);
-
-		logdetN += log(Uu) + log(Qu);
-		
-		Ltot += Ln;
-	    }	
-	}
+	get_globalRVM_chi2(par);
 
 	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
-	if (Ltot < 0.0) {
+	if (par->Ltot < 0.0) {
 	    par->psi00 += M_PI /2.;
 	}
 	par->psi00 = atan( tan(par->psi00) );
@@ -250,11 +183,11 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
         if (par->njump) {
           for (unsigned  l=0; l<par->njump; l++) {
-	    Cube[npar] = psi_jumps[l] * RAD_TO_DEG;
+	    Cube[npar] = par->psi_jumps[l] * RAD_TO_DEG;
             npar++;
           }
         }
 
-        lnew = -chi/2 - 0.5*logdetN;
-	free(psi_jumps);
+        lnew = -1.*par->chi/2 - 0.5*par->logdetN;
+	//free(par->psi_jumps);
 }
