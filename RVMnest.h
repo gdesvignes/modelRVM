@@ -19,6 +19,7 @@ typedef struct {
   int inc_fixed;
   int have_efac;
   int margin_phi0;
+  int psi_jump_fixed;
   int do_plot;
 
   double alpha;   /*  par[0] */

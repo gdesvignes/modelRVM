@@ -92,9 +92,14 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	// Psi0 jumps between different datasets
 	//par->psi_jumps = (double *) malloc(par->njump * sizeof(double));
 	if (par->njump) {
-	  for (unsigned  l=0; l<par->njump; l++) {
-	    par->psi_jumps[l] = Cube[npar] * M_PI;
-	    npar++;
+	  if(!par->psi_jump_fixed) {
+	    for (unsigned  l=0; l<par->njump; l++) {
+	      par->psi_jumps[l] = Cube[npar] * M_PI/2 + M_PI/4.;
+	      npar++;
+	    }
+	    else {
+	      for (unsigned  l=0; l<par->njump; l++) par->psi_jumps[l] = M_PI/2.;
+	    }
 	  }
 	}
 

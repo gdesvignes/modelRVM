@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 	double threshold=1.8;
 	int margin_phi0=0;
 	int nfiles = argc - 1;
-
+	int psi_jump_fixed=1;
 
 	// Read Params from config files
 	param p;
@@ -140,6 +140,7 @@ int main(int argc, char *argv[])
 
 	    inc_fixed = p.inc_fixed;
 	    prate_fixed = p.prate_fixed;
+	    psi_jump_fixed = p.psi_jump_fixed;
 	    have_efac = p.have_efac;
 	    threshold = p.threshold;
 	    margin_phi0 = p.margin_phi0;
@@ -244,6 +245,7 @@ int main(int argc, char *argv[])
 	
 	par->inc_fixed = inc_fixed;
 	par->prate_fixed = prate_fixed;
+	par->psi_jump_fixed = psi_jump_fixed;
 	par->inc = 43.7 * M_PI / 180.;
 	par->prate = 2.234;
 	par->have_efac = have_efac;
@@ -276,8 +278,10 @@ int main(int argc, char *argv[])
 	    if (p.njump) {
 	      par->njump = p.njump;
 	      par->psi_jump_MJD = p.psi_jump_MJD;
-	      ndims += p.njump;
-	      nPar += p.njump;
+	      if (!par->psi_jump_fixed) {
+		ndims += p.njump;
+		nPar += p.njump;
+	      }
 	    }
 	}
 	par->do_plot = 0;
@@ -295,6 +299,7 @@ int main(int argc, char *argv[])
 	cout << "ndims = " << ndims << endl;
 	cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
 	for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
+	cout << "Psi_jump fixed = " << psi_jump_fixed << endl;
 	cout << "Assuming reading " << nfiles << " files" << endl; 
 	cout << "Basefilename " << root << endl; 
 

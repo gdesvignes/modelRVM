@@ -25,6 +25,7 @@ typedef struct param {
   double prate;
   double *r_prate;
   int njump;
+  int psi_jump_fixed;
   double *psi_jump_MJD;
   
   // Data
