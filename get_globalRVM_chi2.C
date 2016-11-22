@@ -155,7 +155,7 @@ void get_globalRVM_chi2(MNStruct *par) {
 		for(unsigned int i = 0; i < par->nbin[j]; i++)
 		  { 
 		    PA2 = get_RVM(par->alpha, beta, par->phi0[j], par->psi00 + eta, (i+.5)/par->nbin[j] * M_PI*2.);
-		    myf << i*360./par->nbin[j] << " "<< par->I[j][i] << " "<< PA2 * 180./M_PI << endl;
+		    myf << i*360./par->nbin[j] << " "<< par->I[j][i] << " "<< par->L[j][i] << " "<< par->V[j][i]<< " " <<  PA2 * 180./M_PI << endl;
 		  }
 		myf.close();
 

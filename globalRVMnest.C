@@ -155,13 +155,14 @@ int main(int argc, char *argv[])
 
 
 	vector <int> nbin;
-	vector< vector<double> > phase, I, Q, U, L;
+	vector< vector<double> > phase, I, Q, U, L, V;
 	vector <double> RMS_I, RMS_Q, RMS_U, MJD;
 	phase.resize(nfiles);	
 	I.resize(nfiles);	
 	Q.resize(nfiles);	
 	U.resize(nfiles);	
 	L.resize(nfiles);
+	V.resize(nfiles);
 
 	// Process and read files
 	//stringstream s;
@@ -208,7 +209,9 @@ int main(int argc, char *argv[])
 	
 	    // Add all points to I vector
 	    I[i].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
-	    
+	    L[i].push_back( sqrt( pow(integration->get_Profile(1,0)->get_amps()[ibin], 2) + pow(integration->get_Profile(2,0)->get_amps()[ibin], 2) ));
+	    V[i].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
+
             // Exclude phase range
             skip_bin = false;
 	    for (int nphs=0; nphs < p.n_phs_exclude[i]; nphs++)
@@ -218,13 +221,9 @@ int main(int argc, char *argv[])
             
 	    if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
 	      phase[i].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
-	      //I[i].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
 	      Q[i].push_back(integration->get_Profile(1,0)->get_amps()[ibin]);
 	      U[i].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
-	      L[i].push_back( sqrt(U[i].back()*U[i].back() + Q[i].back()*Q[i].back()));
-	      
-	      //myf << ibin << " " <<I[i].back() << " " << 0.5 * atan(U[i].back()/  Q[i].back()) * 180./ M_PI<< " " <<28.65 * rmsI.get_value()/L[i].back()<< endl;
-	      //if (L.back() > max_L) max_L = L.back();
+
 	    }
 	  }
 	  cout << "Number of data points " << Q[i].size() << endl;
@@ -233,13 +232,11 @@ int main(int argc, char *argv[])
 	  RMS_I.push_back(rmsI.get_value());
 	  RMS_Q.push_back(rmsQ.get_value());
 	  RMS_U.push_back(rmsU.get_value());
-	  //cout << MJD.back() << endl;
-	  //myf.close();
 	}
 	
 	
 	// Init struct
-	context = init_struct(nfiles, phase , I, Q, U, RMS_I, RMS_Q, RMS_U, nbin, p.njump);
+	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, p.njump);
 
 	MNStruct *par = ((MNStruct *)context);
 	

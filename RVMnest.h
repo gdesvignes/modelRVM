@@ -39,6 +39,8 @@ typedef struct {
   double **I;
   double **Q;
   double **U;
+  double **V;
+  double **L;
 
   double *rmsI;
   double *rmsQ;
@@ -63,7 +65,7 @@ typedef struct {
 } MNStruct;
 
 void readPA(char filename[127], std::vector<double> &  x, std::vector<double> & Q, std::vector<double> & U);
-MNStruct* init_struct(int nfiles, std::vector<std::vector<double> > x, std::vector<std::vector<double> > I, std::vector<std::vector<double> > Q, std::vector<std::vector<double> > U, std::vector<double> rmsI, std::vector<double> rmsQ, std::vector<double> rmsU, std::vector<int>& nbin, int njump);
+MNStruct* init_struct(int nfiles, std::vector<std::vector<double> > x, std::vector<std::vector<double> > I, std::vector<std::vector<double> > Q, std::vector<std::vector<double> > U, std::vector<std::vector<double> > L, std::vector<std::vector<double> > V, std::vector<double> rmsI, std::vector<double> rmsQ, std::vector<double> rmsU, std::vector<int>& nbin, int njump);
 void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void get_globalRVM_chi2(MNStruct *par);

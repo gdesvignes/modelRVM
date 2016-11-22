@@ -6,7 +6,7 @@
 
 using namespace std;
 
-MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector<double> > I, vector< vector<double> > Q, vector< vector<double> > U, vector<double> rmsI, vector<double> rmsQ, vector<double> rmsU, vector<int> &nbin, int njump) {
+MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector<double> > I, vector< vector<double> > Q, vector< vector<double> > U, vector< vector<double> > L, vector< vector<double> > V, vector<double> rmsI, vector<double> rmsQ, vector<double> rmsU, vector<int> &nbin, int njump) {
 
 	// Init struct
 	MNStruct* MNS = (MNStruct*)malloc(sizeof(MNStruct));
@@ -23,8 +23,9 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	MNS->rmsQ = (double *)malloc(nfiles * sizeof(double));
 	MNS->rmsU = (double *)malloc(nfiles * sizeof(double));
 
-
 	MNS->I = (double **)malloc(nfiles * sizeof(double *));
+	MNS->L = (double **)malloc(nfiles * sizeof(double *));
+	MNS->V = (double **)malloc(nfiles * sizeof(double *));
 	MNS->rmsI = (double *)malloc(nfiles * sizeof(double));
 	MNS->nbin = (int *)malloc(nfiles * sizeof(int));
 
@@ -44,14 +45,20 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 		MNS->U[i] = (double *)malloc(MNS->npts[i] * sizeof(double));
 
 		MNS->I[i] = (double *)malloc(MNS->nbin[i] * sizeof(double));
+		MNS->L[i] = (double *)malloc(MNS->nbin[i] * sizeof(double));
+		MNS->V[i] = (double *)malloc(MNS->nbin[i] * sizeof(double));
+
 
 		for (int j=0; j<MNS->npts[i]; j++) {
 		  MNS->phase[i][j] = phase[i][j];
 		  MNS->Q[i][j] = Q[i][j];
 		  MNS->U[i][j] = U[i][j];
+
 		}
 		for (int j=0; j<MNS->nbin[i]; j++) {
 		  MNS->I[i][j] = I[i][j];
+		  MNS->L[i][j] = L[i][j];
+		  MNS->V[i][j] = V[i][j];
 		}
 		cout << i << " "<<  nfiles << " "<<  MNS->npts[i] <<endl;
        	}
