@@ -82,10 +82,10 @@ int main(int argc, char *argv[])
 	// set the MultiNest sampling parameters
 	
 	int IS = 0;					// do Nested Importance Sampling?
-	int mmodal = 1;					// do mode separation?
+	int mmodal = 0;					// do mode separation?
 	int ceff = 1;					// run in constant efficiency mode?
 	int nlive = 2000;				// number of live points
-	double efr = 0.02;				// set the required efficiency
+	double efr = 0.05;				// set the required efficiency
 	double tol = 0.5;				// tol, defines the stopping criteria
 	int ndims = 4;					// dimensionality (no. of free parameters)
 	int nPar = 4;					// total no. of parameters including free & derived parameters
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 	//pWrap[0] = 1; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
 	
 	char filename[128];
-	char root[100] = "chains/eggboxCC-";		// root for output files
+	char root[100] = "chains/RVM-";		        // root for output files
 	int seed = -1;					// random no. generator seed, if < 0 then take the seed from system clock
 	int fb = 1;					// need feedback on standard output?
 	int resume = 1;					// resume from a previous job?
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 
 	double threshold=1.5;
 	int nfiles = 1;
-	vector< vector<double> > phase, I, Q, U, L;
+	vector< vector<double> > phase, I, Q, U, L, V;
 
 	vector <int> nbin;
 	vector <double> RMS_I, RMS_Q, RMS_U;
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         Q.resize(nfiles);
         U.resize(nfiles);
         L.resize(nfiles);
-
+	V.resize(nfiles);
 	Reference::To< Archive > archive = Archive::load( filename );
 	if( !archive ) return -1;
 
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 
 	double ph;
 	double ex1l, ex1h, ex2l, ex2h;
-	ex1l = 0.05; ex1h=.43;ex2l = 0.6; ex2h = 0.95;
+	ex1l = 0.05; ex1h=.43;ex2l = 0.6; ex2h = 0.94;
 
 	nbin.push_back(archive->get_nbin());
 
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 		Q[0].push_back(integration->get_Profile(1,0)->get_amps()[ibin]);
 		U[0].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
 		L[0].push_back( sqrt(U[0].back()*U[0].back() + Q[0].back()*Q[0].back()));
-
+		V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
 		//cout << ibin << " " <<I.back() << " " << 0.5 * atan(U.back(),  Q.back()) <<endl;
 		//if (L.back() > max_L) max_L = L.back();
 	    }
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 	RMS_U.push_back(rmsU.get_value());
 
 	// Init struct
-	context = init_struct(nfiles, phase , I, Q, U, RMS_I, RMS_Q, RMS_U, nbin, 0);
+	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, 0);
 		 
 	
 
