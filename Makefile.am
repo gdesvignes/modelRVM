@@ -7,7 +7,7 @@ if HAVE_MULTINEST
 lib_LTLIBRARIES += libRVMnest.la
 bin_PROGRAMS += globalRVMnest RVMnest
 
-libRVMnest_la_SOURCES = Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C get_globalRVM_chi2.C read_MN_results.C
+libRVMnest_la_SOURCES = simpleParameters.C Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C get_globalRVM_chi2.C read_MN_results.C
 libRVMnest_la_LIBADD = @FFTW_LIBS@ @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@ @MINUIT_LIBS@ @MULTINEST_LIBS@
 endif
 

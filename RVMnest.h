@@ -23,10 +23,7 @@ typedef struct {
   int do_plot;
 
   double alpha;   /*  par[0] */
-  //double beta;
-  //double xsi;
   double delta;   /*  par[1] */
-  //double lambda;   /* */
   double phase0;  /* */
   double inc;             /* Orbital inclination */
   double omega;
@@ -48,9 +45,11 @@ typedef struct {
   double *efac;
 
   double *r_alpha;
+  double *r_beta;
   double *r_delta;
   double *r_Phi0;
   double *r_phi0;
+  double *r_psi0;
   double *r_inc;
   double *r_prate;
   double *r_efac;

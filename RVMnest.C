@@ -3,7 +3,11 @@
 #include <string.h>
 #include <iostream>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "multinest.h"
+#include "Parameters.h"
 #include "RVMnest.h"
 
 // psrchive stuff
@@ -80,7 +84,6 @@ void dumper(int &nSamples, int &nlive, int &nPar, double **physLive, double **po
 int main(int argc, char *argv[])
 {
 	// set the MultiNest sampling parameters
-	
 	int IS = 0;					// do Nested Importance Sampling?
 	int mmodal = 0;					// do mode separation?
 	int ceff = 1;					// run in constant efficiency mode?
@@ -96,10 +99,9 @@ int main(int argc, char *argv[])
 	int maxModes = 100;				// expected max no. of modes (used only for memory allocation)
 	int pWrap[ndims];				// which parameters to have periodic boundary conditions?
 	for(int i = 0; i < ndims; i++) pWrap[i] = 1;
-	//pWrap[0] = 1; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
-	
 	char filename[128];
-	char root[100] = "chains/RVM-";		        // root for output files
+	char root[100];
+	char tmproot[100] = "chains";		        // root for output files
 	int seed = -1;					// random no. generator seed, if < 0 then take the seed from system clock
 	int fb = 1;					// need feedback on standard output?
 	int resume = 1;					// resume from a previous job?
@@ -110,16 +112,27 @@ int main(int argc, char *argv[])
 	int maxiter = 0;				// max no. of iterations, a non-positive value means infinity. MultiNest will terminate if either it 
 							// has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
-
-	double threshold=1.5;
+	double threshold=1.0;
 	int nfiles = 1;
 	vector< vector<double> > phase, I, Q, U, L, V;
-
 	vector <int> nbin;
 	vector <double> RMS_I, RMS_Q, RMS_U;
 
-	strcpy(filename, argv[1]);
+	// Read Params from config files
+	param p;
+	p.numfiles = 1;
+        cout << "Reading parameters" << endl;
+	int rv = readsimpleParameters(&p, "config.txt");
+	if (rv == EXIT_SUCCESS) {
+	  IS = p.IS;
+	  nlive = p.nlive;
+	  ceff = p.ceff;
+	  efr = p.efr;
+	  strcpy(tmproot, p.basename);
+	  threshold = p.threshold;
+	}
 
+	strcpy(filename, argv[1]);
 	phase.resize(nfiles);
         I.resize(nfiles);
         Q.resize(nfiles);
@@ -149,17 +162,24 @@ int main(int argc, char *argv[])
 	Estimate<double> rmsQ = sqrt( stats.get_baseline_variance(1) );
 	Estimate<double> rmsU = sqrt( stats.get_baseline_variance(2) );
 
+	bool skip_bin = false;
 	double max_L=0.;
-
 	double ph;
 	double ex1l, ex1h, ex2l, ex2h;
-	ex1l = 0.05; ex1h=.43;ex2l = 0.6; ex2h = 0.94;
-
 	nbin.push_back(archive->get_nbin());
+
+	mkdir(tmproot, 0700);
+	sprintf(root, "%s/RVM-", tmproot);
 
 	for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
 	    ph = ibin/(double) archive->get_nbin();
-	    if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
+
+	    // Exclude phase range
+            skip_bin = false;
+	    for (int nphs=0; nphs < p.n_phs_exclude[0]; nphs++)
+              if (p.phs_exclude[0][nphs*2] <= ph && ph <= p.phs_exclude[0][1 + nphs*2]) skip_bin = true;
+            if (skip_bin) continue;
+
 	    if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
 		phase[0].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
 		I[0].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
@@ -167,8 +187,7 @@ int main(int argc, char *argv[])
 		U[0].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
 		L[0].push_back( sqrt(U[0].back()*U[0].back() + Q[0].back()*Q[0].back()));
 		V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
-		//cout << ibin << " " <<I.back() << " " << 0.5 * atan(U.back(),  Q.back()) <<endl;
-		//if (L.back() > max_L) max_L = L.back();
+		cout << ibin << " " <<I[0].back() << endl;
 	    }
 	}
 
@@ -178,12 +197,22 @@ int main(int argc, char *argv[])
 
 	// Init struct
 	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, 0);
-		 
-	
+	MNStruct *par = ((MNStruct *)context);
 
+	// Copy the range of parameters
+        if (rv == EXIT_SUCCESS) {
+	  par->r_alpha = p.alpha;
+	  par->r_beta = p.beta;
+	  par->r_phi0 = p.phi0;
+	  par->r_psi0 = p.psi0;
+	} else {
+	  par->r_alpha = NULL;
+	  par->r_beta = NULL;
+	  par->r_phi0 = NULL;
+	  par->r_psi0 = NULL;
+	}
 	
 	// calling MultiNest
-
 	nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
 	logZero, maxiter, RVMLogLike, dumper, context);
 }

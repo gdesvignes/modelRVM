@@ -14,9 +14,11 @@ typedef struct param {
 
   // Params
   double *alpha;
+  double *beta;
   double *delta;
   double *Phi0;
   double *phi0;
+  double *psi0;
   double *efac;
   int inc_fixed;
   double inc;
@@ -36,3 +38,4 @@ typedef struct param {
 } param;
 
 int readParameters(param *p, char *paramFile);
+int readsimpleParameters(param *p, char *paramFile);
