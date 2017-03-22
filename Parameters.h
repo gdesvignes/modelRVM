@@ -28,6 +28,8 @@ typedef struct param {
   double *r_prate;
   int njump;
   int psi_jump_fixed;
+  double *psi_jumps;
+  double *r_psi_jump;
   double *psi_jump_MJD;
   
   // Data

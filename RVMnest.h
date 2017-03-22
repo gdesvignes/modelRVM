@@ -54,8 +54,9 @@ typedef struct {
   double *r_prate;
   double *r_efac;
   int njump;
-  double *psi_jump_MJD;
+  double *r_psi_jump;
   double *psi_jumps;
+  double *psi_jump_MJD;
 
   double chi;
   double Ltot;

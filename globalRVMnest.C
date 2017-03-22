@@ -280,11 +280,14 @@ int main(int argc, char *argv[])
 
 	    if (p.njump) {
 	      par->njump = p.njump;
+	      par->r_psi_jump = p.r_psi_jump;
+	      par->psi_jumps = p.psi_jumps;
 	      par->psi_jump_MJD = p.psi_jump_MJD;
 	      if (!par->psi_jump_fixed) {
 		ndims += p.njump;
 		nPar += p.njump;
 	      }
+	      for(int i = 0; i < par->njump; i++) par->psi_jumps[i] *= M_PI/180;
 	    }
 	}
 	par->do_plot = 0;

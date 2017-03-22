@@ -99,12 +99,11 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		npar++;
 	      }
 	    }
-	  else
-	    {
-	      for (unsigned  l=0; l<par->njump; l++) par->psi_jumps[l] = M_PI/2.;
-	    }
+	  //else
+	  //{
+	  //  for (unsigned  l=0; l<par->njump; l++) par->psi_jumps[l] = M_PI/2.;
+	  //}
 	}
-
 
 	double rmsQ;
 	double rmsU;
