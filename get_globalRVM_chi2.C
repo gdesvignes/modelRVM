@@ -41,7 +41,6 @@
 
 void get_globalRVM_chi2(MNStruct *par) {
 
-
 	char label[16];	
 	int totnbpts=0;
 	double Qu,Uu;
@@ -54,7 +53,7 @@ void get_globalRVM_chi2(MNStruct *par) {
 	double dt;
 	double rmsQ;
         double rmsU;
-
+	double prev_chi = 0.0;
 	stringstream s;
 
 	par->chi = 0.0;
@@ -131,9 +130,7 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 		par->logdetN += log(Uu) + log(Qu);
 		par->Ltot += Ln;
-		
 	      }
-
 
 	    if (par->Ltot < 0.0) {
 	      par->psi00 += M_PI /2.;
@@ -141,9 +138,8 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 	    if (par->do_plot)
 	      {
-		//if (par->Ltot < 0.0) {
-		//    offset += M_PI /2.;
-		//}
+		cout << "File #"<<j << " red. chi2= " << (par->chi-prev_chi)/par->npts[j] << endl;
+		prev_chi = par->chi;
 
 		s.str("");
                 s << (int)par->epoch[j]<< "-prof.log";
@@ -151,7 +147,6 @@ void get_globalRVM_chi2(MNStruct *par) {
                 ofstream myf;
                 myf.open(result.c_str());
 		double PA, Lv, Lve;
-		//cout << par->alpha* 180/M_PI << " "<<  xsi* 180/M_PI << " "<<  par->phi0[j]* 180/M_PI << " "<< (par->psi00 + eta)* 180/M_PI << endl;
 		for(unsigned int i = 0; i < par->nbin[j]; i++)
 		  { 
 		    PA2 = get_RVM(par->alpha, beta, par->phi0[j], par->psi00 + eta, (i+.5)/par->nbin[j] * M_PI*2.);
@@ -173,7 +168,6 @@ void get_globalRVM_chi2(MNStruct *par) {
                     myf << par->phase[j][i]*180./M_PI << " "<< PA << " " << Lve << endl;
                   }
                 myf.close();
-		
 	      }
 	}
 
