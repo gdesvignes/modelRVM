@@ -11,6 +11,7 @@
 #include "RVMnest.h"
 #include "read_MN_results.h"
 
+#include <mpi.h>
 
 // psrchive stuff
 #include "Pulsar/Archive.h"
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
 	int fb = 1;					// need feedback on standard output?
 	int resume = 1;					// resume from a previous job?
 	int outfile = 1;				// write output files?
-	int initMPI = 1;				// initialize MPI routines?, relevant only if compiling with MPI
+	int initMPI = 0;				// initialize MPI routines?, relevant only if compiling with MPI
 							// set it to F if you want your main program to handle MPI initialization
 	double logZero = -1E90;				// points with loglike < logZero will be ignored by MultiNest
 	int maxiter = 0;				// max no. of iterations, a non-positive value means infinity. MultiNest will terminate if either it 
@@ -125,6 +126,11 @@ int main(int argc, char *argv[])
 	int margin_phi0=0;
 	int nfiles = argc - 1;
 	int psi_jump_fixed=1;
+
+	int rank, size;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
 
 	// Read Params from config files
 	param p;
@@ -282,32 +288,38 @@ int main(int argc, char *argv[])
 	    }
 	}
 	par->do_plot = 0;
-	
-	// calling MultiNest
-	cout << endl << " -- Parameters -- " << endl;
-	cout << "Inc fixed   = " << inc_fixed << endl;
-	if (prate_fixed) cout << "Inclination angle (deg) = " << par->inc * 180./M_PI<< endl;
-	cout << "Prate fixed = " << prate_fixed << endl;
-	if (prate_fixed) cout << "Prate (deg/yr) = " << par->prate << endl;
-	cout << "Have EFAC   = " << have_efac << endl;
-	cout << "Threshold   = " << threshold << endl;
-	cout << "Margin_phi0 = " << margin_phi0 << endl;
-	cout << "nlive = " << nlive << endl;
-	cout << "ndims = " << ndims << endl;
-	cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
-	for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
-	cout << "Psi_jump fixed = " << psi_jump_fixed << endl;
-	cout << "Assuming reading " << nfiles << " files" << endl; 
-	cout << "Basefilename " << root << endl; 
+
+	if (rank==0) {
+	  // calling MultiNest
+	  cout << endl << " -- Parameters -- " << endl;
+	  cout << "Inc fixed   = " << inc_fixed << endl;
+	  if (prate_fixed) cout << "Inclination angle (deg) = " << par->inc * 180./M_PI<< endl;
+	  cout << "Prate fixed = " << prate_fixed << endl;
+	  if (prate_fixed) cout << "Prate (deg/yr) = " << par->prate << endl;
+	  cout << "Have EFAC   = " << have_efac << endl;
+	  cout << "Threshold   = " << threshold << endl;
+	  cout << "Margin_phi0 = " << margin_phi0 << endl;
+	  cout << "nlive = " << nlive << endl;
+	  cout << "ndims = " << ndims << endl;
+	  cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
+	  for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
+	  cout << "Psi_jump fixed = " << psi_jump_fixed << endl;
+	  cout << "Assuming reading " << nfiles << " files" << endl;
+	  cout << "Basefilename " << root << endl;
+	}
 
 	nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
 	logZero, maxiter, globalRVMLogLike, dumper, context);
+	
 
+	if (rank == 0) {
+	  // Read results from stats file
+	  read_stats(root, nPar, par);
+	  get_globalRVM_chi2(par);
+	}
 
+	MPI_Finalize();
 
-	// Read results from stats file
-	read_stats(root, nPar, par);
-	get_globalRVM_chi2(par);
 
 }
 
