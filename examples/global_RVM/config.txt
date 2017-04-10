@@ -26,12 +26,21 @@ phi0=3;9.5
 efac=0.4;4
 
 # Inclination angle in degrees
-inc_fixed=1
-inc=0.0;180.0
+inc_fixed=0
+r_inc=10.0;120.0
+inc=43.7
 
 # Precession rate
-prate_fixed=1
-prate=0.2;8.0
+prate_fixed=0
+r_prate=0.8;4.0
+prate=2.234
+
+# Include JUMP at some given EPOCH
+psi_jump_MJD=56000.
+psi_jump_fixed=1
+psi_jumps=90
+r_psi_jump=75;105
+
 
 [data]
 numfiles=13
