@@ -1,0 +1,25 @@
+[multinest]
+IS=0
+nlive=2000
+ceff=1
+efr=0.05
+basename=results
+
+[config]
+threshold=1.5
+
+# Include individual EFAC for the profiles
+have_efac=0
+
+[params]
+alpha=90;150
+#delta=20;170
+#psi0=0;50
+phi0=2;14
+
+# EFAC
+efac=0.4;4
+
+[data]
+numfiles=1
+phs_exclude_0=0.04;0.45;0.58;0.94
