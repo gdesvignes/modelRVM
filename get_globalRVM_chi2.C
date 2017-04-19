@@ -5,23 +5,15 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-
-#include "Minuit2/FunctionMinimum.h"
-#include "Minuit2/MnMigrad.h"
-#include "Minuit2/MnMinos.h"
-#include "Minuit2/MnMinimize.h"
-#include "Minuit2/MnUserParameters.h"
-#include "Minuit2/MnPrint.h"
-#include "Minuit2/FCNBase.h"
-
-
-//#include "RVMnest.h"
-#include "globalRVMKJ_Fcn.h"
 #include <complex>
+
+#include "RVMnest.h"
 
 #define DEG_TO_RAD	(M_PI/180.0)
 #define RAD_TO_DEG	(180.0/M_PI)
 #define VERBOSE 0
+
+using namespace std;
 
 /******************************************** loglikelihood routine ****************************************************/
 

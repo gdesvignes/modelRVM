@@ -1,7 +1,10 @@
+#include <config.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <complex>
 
+#ifdef HAVE_MINUIT
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnMinos.h"
@@ -9,15 +12,15 @@
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnPrint.h"
 #include "Minuit2/FCNBase.h"
-
-
-//#include "RVMnest.h"
 #include "globalRVMKJ_Fcn.h"
-#include <complex>
+#else
+#include "RVMnest.h"
+#endif
 
 #define DEG_TO_RAD	(M_PI/180.0)
 #define RAD_TO_DEG	(180.0/M_PI)
 
+using namespace std;
 
 /******************************************** loglikelihood routine ****************************************************/
 
@@ -122,7 +125,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	  }
 	}
 
-
+#ifdef HAVE_MINUIT
 	// Marginalize over Phi0
 	if (par->margin_phi0) {
 	    //RVM_Fcn fFCN();
@@ -145,9 +148,8 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		par->phi0[j] = min.UserState().Value(label);
 		//printf("phi0[%02d] = %lf\n",j, par->phi0[j]);
 	    }
-
-
 	}
+#endif
 
 	get_globalRVM_chi2(par);
 

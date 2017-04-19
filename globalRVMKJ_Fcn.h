@@ -1,16 +1,12 @@
+#include <complex>
+#include "RVMnest.h"
+using namespace std;
+
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/FCNBase.h"
-
-using namespace std;
-using namespace ROOT::Minuit2;
-
-#include "RVMnest.h"
-//#include "globalRVM_Fcn.h"
-#include <complex> 
-
+using namespace ROOT::Minuit2
 
 class RVM_Fcn : public FCNBase {
-
 
 public:
 
