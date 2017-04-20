@@ -60,13 +60,9 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 		  MNS->L[i][j] = L[i][j];
 		  MNS->V[i][j] = V[i][j];
 		}
-		cout << i << " "<<  nfiles << " "<<  MNS->npts[i] <<endl;
        	}
-		
-	cout << "Malloc finished" << endl;
-
-	cout << "Params finished" << endl;
-
+	//cout << "Malloc finished" << endl;
+	//cout << "Params finished" << endl;
 	return MNS;
 }
 

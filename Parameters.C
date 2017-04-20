@@ -46,7 +46,6 @@ int readParameters(param *p, char *paramFile){
     p->njump = length;
 
     // Read the range of phases to be excluded
-    p->numfiles = g_key_file_get_integer(gkf,"data","numfiles", NULL);
     p->phs_exclude = (double **) malloc( p->numfiles * sizeof(double *));
     p->n_phs_exclude = (int *) malloc( p->numfiles * sizeof(int));
     for (int i=0; i < p->numfiles; i++) {
