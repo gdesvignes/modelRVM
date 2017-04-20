@@ -27,6 +27,7 @@ int readParameters(param *p, char *paramFile){
     p->threshold = g_key_file_get_double(gkf,"config","threshold",NULL);
     p->have_efac = g_key_file_get_integer(gkf,"config","have_efac",NULL);
     p->margin_phi0 = g_key_file_get_integer(gkf,"config","margin_phi0",NULL);
+    p->have_aberr_offset = g_key_file_get_integer(gkf,"config","have_aberr_offset",NULL);
 
     p->alpha = g_key_file_get_double_list(gkf,"params","alpha", &length, NULL);
     p->delta = g_key_file_get_double_list(gkf,"params","delta", &length, NULL);

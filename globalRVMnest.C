@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
 	int inc_fixed=1;
 	int prate_fixed=1;
 	int have_efac=1;
+	int have_aberr_offset=0;
 	double threshold=1.8;
 	int margin_phi0=0;
 	int nfiles = argc - 1;
@@ -148,6 +149,7 @@ int main(int argc, char *argv[])
 	    prate_fixed = p.prate_fixed;
 	    psi_jump_fixed = p.psi_jump_fixed;
 	    have_efac = p.have_efac;
+	    have_aberr_offset = p.have_aberr_offset;
 	    threshold = p.threshold;
 	    margin_phi0 = p.margin_phi0;
 
@@ -252,6 +254,7 @@ int main(int argc, char *argv[])
 	par->inc = 43.7 * M_PI / 180.;
 	par->prate = 2.234;
 	par->have_efac = have_efac;
+	par->have_aberr_offset = have_aberr_offset;
 	par->margin_phi0 = margin_phi0;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
 		
@@ -261,6 +264,7 @@ int main(int argc, char *argv[])
 	if (!par->prate_fixed) {ndims+=1; nPar+=1;}
 	if (!par->inc_fixed) {ndims+=1; nPar+=1;}
 	if (par->have_efac) {ndims+=nfiles; nPar+=nfiles;}
+	if (par->have_aberr_offset) {ndims+=nfiles; nPar+=nfiles;}
 
 	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
 	pWrap[0] = 0; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
@@ -270,25 +274,25 @@ int main(int argc, char *argv[])
 	if (rv == EXIT_SUCCESS) {
 	  par->inc = p.inc * M_PI / 180.;
 	  par->prate = p.prate;
-	    par->r_alpha = p.alpha;
-	    par->r_delta = p.delta;
-	    par->r_Phi0 = p.Phi0;
-	    par->r_phi0 = p.phi0;
-	    par->r_inc = p.r_inc;
-	    par->r_prate = p.r_prate;
-	    par->r_efac = p.efac;
-
-	    if (p.njump) {
+	  par->r_alpha = p.alpha;
+	  par->r_delta = p.delta;
+	  par->r_Phi0 = p.Phi0;
+	  par->r_phi0 = p.phi0;
+	  par->r_inc = p.r_inc;
+	  par->r_prate = p.r_prate;
+	  par->r_efac = p.efac;
+	  
+	  if (p.njump) {
 	      par->njump = p.njump;
 	      par->r_psi_jump = p.r_psi_jump;
 	      par->psi_jumps = p.psi_jumps;
 	      par->psi_jump_MJD = p.psi_jump_MJD;
 	      if (!par->psi_jump_fixed) {
-		ndims += p.njump;
-		nPar += p.njump;
+		  ndims += p.njump;
+		  nPar += p.njump;
 	      }
 	      for(int i = 0; i < par->njump; i++) par->psi_jumps[i] *= M_PI/180;
-	    }
+	  }
 	}
 	par->do_plot = 0;
 

@@ -69,6 +69,14 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    for (unsigned int j = 0; j < par->n_epoch; j++) par->phi0[j] = 5.0 * DEG_TO_RAD;
 	}
 
+	// include an offset between the PA curves of the MP and IP
+	if (par->have_aberr_offset) {
+	    for (unsigned int j = 0; j < par->n_epoch; j++) {
+		par->phi_aberr_offset[j] = (Cube[npar] * 16 - 8) * DEG_TO_RAD;
+		npar++;
+	    }
+	}
+
 	// Precession rate
 	if (!par->prate_fixed) {
 	    par->prate = Cube[npar] * (par->r_prate[1]-par->r_prate[0]) + par->r_prate[0];
@@ -171,6 +179,13 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    for (unsigned int j = 0; j < par->n_epoch; j++) {
 		Cube[npar] = par->phi0[j] * RAD_TO_DEG;
 		npar++;
+	    }
+	}
+
+	if (par->have_aberr_offset) {
+            for (unsigned int j = 0; j < par->n_epoch; j++) {
+		Cube[npar] = par->phi_aberr_offset[j] * RAD_TO_DEG;
+                npar++;
 	    }
 	}
 

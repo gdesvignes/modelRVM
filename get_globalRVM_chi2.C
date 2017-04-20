@@ -104,9 +104,11 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 	    par->Ltot = 0.;
 
-	    for(unsigned int i = 0; i < par->npts[j]; i++) 
-	      {
-		PA2 = 2*get_RVM(par->alpha, beta, par->phi0[j], par->psi00 + eta, par->phase[j][i]);
+	    for(unsigned int i = 0; i < par->npts[j]; i++) {
+		double phi_off = 0.0;
+		if (par->phase[j][i] > 90.*DEG_TO_RAD && par->phase[j][i] < 270.*DEG_TO_RAD)
+		    phi_off = par->phi_aberr_offset[j];
+		PA2 = 2*get_RVM(par->alpha, beta, par->phi0[j] + phi_off, par->psi00 + eta, par->phase[j][i]);
 
 		cosPA2 = cos(PA2);
 		sinPA2 = sin(PA2);
