@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
 
 	// Read Params from config files
 	param p;
+	p.numfiles = nfiles;
 	cout << "Reading parameters" << endl; 
 	int rv = readParameters(&p, "config.txt");
 
@@ -159,6 +160,8 @@ int main(int argc, char *argv[])
 	    ifstream  src("config.txt", ios::binary);
 	    ofstream  dst(confname,   ios::binary);
 	    dst << src.rdbuf();
+	} else {
+	  for (int i=0; i<nfiles; i++)  p.n_phs_exclude[i] = 0;
 	}
 
 
@@ -178,11 +181,11 @@ int main(int argc, char *argv[])
 	for (unsigned i=0; i<nfiles; i++) {
 
 	  Reference::To< Archive > archive = Archive::load( argv[i+1] );
-	  cout << "Opening " << argv[i+1] << endl;
+	  if (rank==0) cout << "Opening " << argv[i+1] << endl;
 	  if( !archive ) return -1;
 
 	  nbin.push_back(archive->get_nbin());
-	  cout << "  nbin : " << nbin.back()<<endl;
+	  //cout << "  nbin : " << nbin.back()<<endl;
 	  // correct PA to infinite frequency
 	  FaradayRotation xform;
 	  xform.set_reference_wavelength( 0 );
@@ -208,10 +211,12 @@ int main(int argc, char *argv[])
 	  double max_L=0.;
 	  double ph=0.;
 	  bool skip_bin = false;
-	  
-	  for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
-            cout << "File #" << i << " : will exclude phase " << p.phs_exclude[i][nphs*2] << " to " <<  p.phs_exclude[i][1 + nphs*2] << endl;
-	  
+
+	  if (rank==0) {
+	    for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
+	      cout << "File #" << i << " : will exclude phase " << p.phs_exclude[i][nphs*2] << " to " <<  p.phs_exclude[i][1 + nphs*2] << endl;
+	  }
+
 	  for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
             ph = ibin/(double) archive->get_nbin();
 	
@@ -313,6 +318,7 @@ int main(int argc, char *argv[])
 	  cout << "Psi_jump fixed = " << psi_jump_fixed << endl;
 	  cout << "Assuming reading " << nfiles << " files" << endl;
 	  cout << "Basefilename " << root << endl;
+	  cout << endl;
 	}
 
 	nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
