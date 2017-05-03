@@ -17,6 +17,9 @@
 
 #include "RVMnest.h"
 
+
+#include "globalRVM_likelihood_PC.h"
+
 #define DEG_TO_RAD	(M_PI/180.0)
 #define RAD_TO_DEG	(180.0/M_PI)
 
@@ -54,7 +57,7 @@ void prior (double cube[], double theta[], int nDims,  void *context)
 
   // RVM center Phase of the profiles - Can be marginalized                                                                 
   if (!sp->margin_phi0) {
-    for (unsigned int j = 0; j < par->n_epoch; j++) {
+    for (unsigned int j = 0; j < sp->n_epoch; j++) {
       theta[ipar] = cube[ipar] * (sp->r_phi0[1] - sp->r_phi0[0]) + sp->r_phi0[0];
       ipar++;
     }
@@ -100,11 +103,9 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
   //	MNStruct *par = ((MNStruct *)context);
 
 	char label[16];	
+	int ipar=0;
 	double Qu,Uu;
-        double chi = 0.0, Ln, PA2;
-	double Ltot = 0., logdetN = 0.;
-	double cosPA2, sinPA2;
-	complex <double> L, arg;
+	double lnew;
 
 	sp->alpha = theta[ipar] * DEG_TO_RAD; ipar++;
 	sp->delta = theta[ipar] * DEG_TO_RAD; ipar++;
