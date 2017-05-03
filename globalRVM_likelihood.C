@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <complex>
 
+
 #ifdef HAVE_MINUIT
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
@@ -13,9 +14,10 @@
 #include "Minuit2/MnPrint.h"
 #include "Minuit2/FCNBase.h"
 #include "globalRVMKJ_Fcn.h"
-#else
-#include "RVMnest.h"
 #endif
+
+#include "RVMnest.h"
+//#endif
 
 #define DEG_TO_RAD	(M_PI/180.0)
 #define RAD_TO_DEG	(180.0/M_PI)

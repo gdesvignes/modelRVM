@@ -23,7 +23,9 @@
 using namespace std;
 using namespace Pulsar;
 
-
+#include "interfaces.hpp"
+#include "globalRVM_likelihood_PC.h"
+MNStruct *sp;
 
 /************************************************* dumper routine ******************************************************/
 
@@ -127,7 +129,8 @@ int main(int argc, char *argv[])
 	int margin_phi0=0;
 	int nfiles = argc - 1;
 	int psi_jump_fixed=1;
-
+	int sampler = 0;
+	
 	int rank, size;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -140,26 +143,27 @@ int main(int argc, char *argv[])
 	int rv = readParameters(&p, "config.txt");
 
 	if (rv == EXIT_SUCCESS) {
-	    IS = p.IS;
-	    nlive = p.nlive;
-	    ceff = p.ceff;
-	    efr = p.efr;
-	    strcpy(root, p.basename);
-
-	    inc_fixed = p.inc_fixed;
-	    prate_fixed = p.prate_fixed;
-	    psi_jump_fixed = p.psi_jump_fixed;
-	    have_efac = p.have_efac;
-	    have_aberr_offset = p.have_aberr_offset;
-	    threshold = p.threshold;
-	    margin_phi0 = p.margin_phi0;
-
-
+	  sampler = p.sampler;
+	  IS = p.IS;
+	  nlive = p.nlive;
+	  ceff = p.ceff;
+	  efr = p.efr;
+	  strcpy(root, p.basename);
+	  
+	  inc_fixed = p.inc_fixed;
+	  prate_fixed = p.prate_fixed;
+	  psi_jump_fixed = p.psi_jump_fixed;
+	  have_efac = p.have_efac;
+	  have_aberr_offset = p.have_aberr_offset;
+	  threshold = p.threshold;
+	  margin_phi0 = p.margin_phi0;
+	  
+	  
 	    // Copy config file
-	    sprintf(confname,"%s.config", root);
-	    ifstream  src("config.txt", ios::binary);
-	    ofstream  dst(confname,   ios::binary);
-	    dst << src.rdbuf();
+	  sprintf(confname,"%s.config", root);
+	  ifstream  src("config.txt", ios::binary);
+	  ofstream  dst(confname,   ios::binary);
+	  dst << src.rdbuf();
 	} else {
 	  for (int i=0; i<nfiles; i++)  p.n_phs_exclude[i] = 0;
 	}
@@ -252,7 +256,8 @@ int main(int argc, char *argv[])
 	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, p.njump);
 
 	MNStruct *par = ((MNStruct *)context);
-	
+
+	par->sampler = sampler;
 	par->inc_fixed = inc_fixed;
 	par->prate_fixed = prate_fixed;
 	par->psi_jump_fixed = psi_jump_fixed;
@@ -321,8 +326,35 @@ int main(int argc, char *argv[])
 	  cout << endl;
 	}
 
-	nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
-	logZero, maxiter, globalRVMLogLike, dumper, context);
+	if (sampler==0)
+	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, globalRVMLogLike, dumper, context);
+	else if (sampler==1) {
+	  Settings settings;
+          settings.nDims         = par->ndims;
+          settings.nDerived      = 1;
+          settings.nlive         = 500;
+          settings.num_repeats   = settings.nDims*5;
+          settings.do_clustering = false;
+          settings.precision_criterion = 1e-3;
+          settings.base_dir.assign(root);
+          settings.file_root     = "chainsPC";
+          settings.write_resume  = true;
+          settings.read_resume   = true;
+          settings.write_live    = true;
+          settings.write_dead    = false;
+          settings.write_stats   = true;
+          settings.equals        = true;
+          settings.posteriors    = true;
+          settings.cluster_posteriors = false;
+          settings.feedback      = 1;
+          settings.update_files  = settings.nlive;
+          settings.boost_posterior= 5.0;
+
+          //setup_loglikelihood();                                                                             
+          sp = par;
+          run_polychord(globalRVMLogLike_PC, prior, settings) ;
+
+	}
 	
 
 	if (rank == 0) {

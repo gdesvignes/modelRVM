@@ -1,5 +1,8 @@
 
 typedef struct param {
+  // Sampler
+  int sampler;
+
     // Multinest
     int IS;
     int nlive;

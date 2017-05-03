@@ -1,3 +1,6 @@
+#ifndef RVM_H_INCLUDED
+#define RVM_H_INCLUDED
+
 #include<vector>
 
 #define NB_PTS_PROF 2048.0
@@ -9,61 +12,61 @@
 
 typedef struct {
 
-    int n_epoch;    /* Number of epochs */
-    
-    double *epoch;
-    int *npts;
-    int *nbin;
-    
-    int prate_fixed;
-    int inc_fixed;
-    int have_efac;
-    int have_aberr_offset;
-    int margin_phi0;
-    int psi_jump_fixed;
-    int do_plot;
-    
-    double alpha;   /*  par[0] */
-    double delta;   /*  par[1] */
-    double phase0;  /* */
-    double inc;             /* Orbital inclination */
-    double omega;
-    double prate;
-    double psi00;   /*  */
-    double *phi0;  /* */
-    double psi0;
-    double *phi_aberr_offset;
-    
-    double **phase;
-    double **I;
-    double **Q;
-    double **U;
-    double **V;
-    double **L;
-    
-    double *rmsI;
-    double *rmsQ;
-    double *rmsU;
-    double *efac;
-    
-    double *r_alpha;
-    double *r_beta;
-    double *r_delta;
-    double *r_Phi0;
-    double *r_phi0;
-    double *r_psi0;
-    double *r_inc;
-    double *r_prate;
-    double *r_efac;
-    int njump;
-    double *r_psi_jump;
-    double *psi_jumps;
-    double *psi_jump_MJD;
-    
-    double chi;
-    double Ltot;
-    double logdetN;
-    
+  int n_epoch;    /* Number of epochs */
+  int ndims;
+  double *epoch;
+  int *npts;
+  int *nbin;
+  int sampler;
+  int prate_fixed;
+  int inc_fixed;
+  int have_efac;
+  int have_aberr_offset;
+  int margin_phi0;
+  int psi_jump_fixed;
+  int do_plot;
+  
+  double alpha;   /*  par[0] */
+  double delta;   /*  par[1] */
+  double phase0;  /* */
+  double inc;             /* Orbital inclination */
+  double omega;
+  double prate;
+  double psi00;   /*  */
+  double *phi0;  /* */
+  double psi0;
+  double *phi_aberr_offset;
+  
+  double **phase;
+  double **I;
+  double **Q;
+  double **U;
+  double **V;
+  double **L;
+  
+  double *rmsI;
+  double *rmsQ;
+  double *rmsU;
+  double *efac;
+  
+  double *r_alpha;
+  double *r_beta;
+  double *r_delta;
+  double *r_Phi0;
+  double *r_phi0;
+  double *r_psi0;
+  double *r_inc;
+  double *r_prate;
+  double *r_efac;
+  int njump;
+  double *r_psi_jump;
+  double *psi_jumps;
+  double *psi_jump_MJD;
+  
+  double chi;
+  double Ltot;
+  double logdetN;
+  
 } MNStruct;
 
 void readPA(char filename[127], std::vector<double> &  x, std::vector<double> & Q, std::vector<double> & U);
@@ -72,3 +75,6 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void get_globalRVM_chi2(MNStruct *par);
 double get_RVM(const double &al, const double &be, const double &ph0, const double &ps0, const double &x);
+
+
+#endif

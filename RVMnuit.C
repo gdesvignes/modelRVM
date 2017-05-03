@@ -157,15 +157,16 @@ if ( mjd > 54400 && mjd < 54480) {ex2l = .527298828125; ex1h = .498099499499; ex
 //if ( mjd > 54400 && mjd < 54480) {ex2l = .526298828125; ex1h = .500198828125; ex2h = .989; ex1l = 0.014;}
 if ( mjd > 55000) {ex1h = .494; ex2l=0.549;}
 //if ( mjd > 55000) {ex1h = .505;}
-
 #endif
+
+ ex1l = 0.04;ex1h = 0.45; ex2l = .58; ex2h = 0.94;
 
 
   for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
       ph = ibin/(double) archive->get_nbin();
 
-      //if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
-      if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h) || (ex3l <= ph && ph <= ex3h)) continue;
+      if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h)) continue;
+      //if ((ex1l <= ph && ph <= ex1h) || (ex2l <= ph && ph <= ex2h) || (ex3l <= ph && ph <= ex3h)) continue;
 
       if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
         phase.push_back((ibin+.5)*(2*M_PI/(double)archive->get_nbin()));
