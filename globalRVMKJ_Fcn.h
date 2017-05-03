@@ -4,7 +4,7 @@ using namespace std;
 
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/FCNBase.h"
-using namespace ROOT::Minuit2
+using namespace ROOT::Minuit2;
 
 class RVM_Fcn : public FCNBase {
 
