@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
 	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, globalRVMLogLike, dumper, context);
 	else if (sampler==1) {
 	  Settings settings;
-          settings.nDims         = par->ndims;
+          settings.nDims         = ndims;
           settings.nDerived      = 1;
           settings.nlive         = 500;
           settings.num_repeats   = settings.nDims*5;
