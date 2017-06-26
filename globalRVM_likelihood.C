@@ -87,8 +87,8 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
 	// Inclination angle
 	if (!par->inc_fixed) {
- 	    par->inc = Cube[npar] * (par->r_inc[1]*DEG_TO_RAD - par->r_inc[0]*DEG_TO_RAD) + par->r_inc[0]*DEG_TO_RAD;
-	    npar++;
+	  par->inc = (Cube[npar] * (par->r_inc[1] - par->r_inc[0]) + par->r_inc[0]) * DEG_TO_RAD;
+	  npar++;
 	}
 	
 
