@@ -302,7 +302,9 @@ int main(int argc, char *argv[])
 
 	int pWrap[ndims];
 	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
-        pWrap[0] = 0; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
+	if (par->r_delta[0]==0 && par->r_delta[0]==180.) pWrap[1] = 1;
+	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==180.) pWrap[2] = 1;
+        pWrap[3] = 1;
 
 	if (rank==0) {
 	  // calling MultiNest
