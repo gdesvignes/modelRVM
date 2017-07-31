@@ -212,7 +212,7 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	    sp->psi00 += M_PI /2.;
 	}
 	sp->psi00 = atan( tan(sp->psi00) );
-	
+	theta[3] = sp->psi00 / DEG_TO_RAD;
 
 
         lnew = -1.*sp->chi/2 - 0.5*sp->logdetN;

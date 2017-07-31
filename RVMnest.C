@@ -19,7 +19,7 @@
 
 using namespace std;
 using namespace Pulsar;
-
+MNStruct *sp;
 
 
 /************************************************* dumper routine ******************************************************/

@@ -9,7 +9,7 @@
 #include "multinest.h"
 #include "Parameters.h"
 #include "RVMnest.h"
-#include "read_MN_results.h"
+#include "read_results.h"
 
 #include <mpi.h>
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	// set the MultiNest sampling parameters
 	
 	int IS = 0;	 // IS =1 for evidence comparison				// do Nested Importance Sampling?
-	int mmodal = 1;					// do mode separation?
+	int mmodal = 0;					// do mode separation?
 	int ceff = 1;					// run in constant efficiency mode?
 	int nlive = 2000;				// number of live points
 	double efr = 0.05;				// set the required efficiency
@@ -99,16 +99,13 @@ int main(int argc, char *argv[])
 	int ndims = 4;					// dimensionality (no. of free parameters)
 	int nPar = 4;					// total no. of parameters including free & derived parameters
 	int nClsPar = 2;				// no. of parameters to do mode separation on
-	int updInt = 1000;				// after how many iterations feedback is required & the output files should be updated
+	int updInt = 5000;				// after how many iterations feedback is required & the output files should be updated
 							// note: posterior files are updated & dumper routine is called after every updInt*10 iterations
 	double Ztol = -1E90;				// all the modes with logZ < Ztol are ignored
-	int maxModes = 100;				// expected max no. of modes (used only for memory allocation)
-	int pWrap[ndims];				// which parameters to have periodic boundary conditions?
-	for(int i = 0; i < ndims; i++) pWrap[i] = 1;
-	//pWrap[0] = 1; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
+	int maxModes = 10;				// expected max no. of modes (used only for memory allocation)
 	
 	char filename[128];
-	char root[100] = "chains/globalRVMnest-";		// root for output files
+	char root[160] = "chains/globalRVMnest-";		// root for output files
 	int seed = -1;					// random no. generator seed, if < 0 then take the seed from system clock
 	int fb = 1;					// need feedback on standard output?
 	int resume = 1;					// resume from a previous job?
@@ -120,7 +117,7 @@ int main(int argc, char *argv[])
 							// has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 
-	char confname[128];				// root for output files
+	char confname[160];				// root for output files
 	int inc_fixed=1;
 	int prate_fixed=1;
 	int have_efac=1;
@@ -276,9 +273,6 @@ int main(int argc, char *argv[])
 	if (par->have_efac) {ndims+=nfiles; nPar+=nfiles;}
 	if (par->have_aberr_offset) {ndims+=nfiles; nPar+=nfiles;}
 
-	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
-	pWrap[0] = 0; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
-
 	par->njump = 0;
 	// Copy the range of parameters
 	if (rv == EXIT_SUCCESS) {
@@ -306,6 +300,10 @@ int main(int argc, char *argv[])
 	}
 	par->do_plot = 0;
 
+	int pWrap[ndims];
+	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
+        pWrap[0] = 0; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
+
 	if (rank==0) {
 	  // calling MultiNest
 	  cout << endl << " -- Parameters -- " << endl;
@@ -326,8 +324,10 @@ int main(int argc, char *argv[])
 	  cout << endl;
 	}
 
-	if (sampler==0)
-	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, globalRVMLogLike, dumper, context);
+	if (sampler==0) {
+	  sprintf(filename,"%s/chainsMN-", root);
+	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, filename, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, globalRVMLogLike, dumper, context);
+	}
 	else if (sampler==1) {
 	  Settings settings;
           settings.nDims         = ndims;
@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
           settings.equals        = true;
           settings.posteriors    = true;
           settings.cluster_posteriors = false;
-          settings.feedback      = 1;
+          settings.feedback      = 2;
           settings.update_files  = settings.nlive;
           settings.boost_posterior= 5.0;
 
