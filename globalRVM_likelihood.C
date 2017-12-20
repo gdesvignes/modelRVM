@@ -118,34 +118,31 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	  }
 	}
 
-	double rmsQ;
-	double rmsU;
-
-	vector<double> vrmsQ, vrmsU;
-	vector< vector<double> > vQ, vU, vphase;
-	vQ.resize(par->n_epoch); vU.resize(par->n_epoch); vphase.resize(par->n_epoch);
-
-	for(unsigned int j = 0; j < par->n_epoch; j++) {
-	  vrmsQ.push_back(par->rmsQ[j]);
-	  vrmsU.push_back(par->rmsU[j]);
-	  for(unsigned int i = 0; i < par->npts[j]; i++) {
-	    vQ[j].push_back(par->Q[j][i]);
-	    vU[j].push_back(par->U[j][i]);
-	    vphase[j].push_back(par->phase[j][i]);
+	if (par->margin_phi0) {
+	  vector<double> vrmsQ, vrmsU;
+	  vector< vector<double> > vQ, vU, vphase;
+	  vQ.resize(par->n_epoch); vU.resize(par->n_epoch); vphase.resize(par->n_epoch);
+	  for(unsigned int j = 0; j < par->n_epoch; j++) {
+	    vrmsQ.push_back(par->rmsQ[j]);
+	    vrmsU.push_back(par->rmsU[j]);
+	    for(unsigned int i = 0; i < par->npts[j]; i++) {
+	      vQ[j].push_back(par->Q[j][i]);
+	      vU[j].push_back(par->U[j][i]);
+	      vphase[j].push_back(par->phase[j][i]);
+	    }
 	  }
-	}
 
 #ifdef HAVE_MINUIT
-	// Marginalize over Phi0
-	if (par->margin_phi0) {
+	  // Marginalize over Phi0
+	  if (par->margin_phi0) {
 	    //RVM_Fcn fFCN();
 	    RVM_Fcn fFCN(vphase, vQ, vU, vrmsQ, vrmsU);
 	    fFCN.set_params(par);
 
 	    MnUserParameters upar;
 	    for(unsigned int j = 0; j < par->n_epoch; j++) {
-		sprintf(label, "phi0_%d", j);
-		upar.Add(label, par->phi0[j], 5.);
+	      sprintf(label, "phi0_%d", j);
+	      upar.Add(label, par->phi0[j], 5.);
 	    }
 
 	    MnMinimize migrad(fFCN, upar);
@@ -154,12 +151,13 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    //cout<<"minimum: "<<min<<endl;
 
 	    for(unsigned int j = 0; j < par->n_epoch; j++) {
-		sprintf(label, "phi0_%d", j);
-		par->phi0[j] = min.UserState().Value(label);
-		//printf("phi0[%02d] = %lf\n",j, par->phi0[j]);
+	      sprintf(label, "phi0_%d", j);
+	      par->phi0[j] = min.UserState().Value(label);
+	      //printf("phi0[%02d] = %lf\n",j, par->phi0[j]);
 	    }
-	}
+	  }
 #endif
+	}
 
 	get_globalRVM_chi2(par);
 
@@ -207,7 +205,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    }
 	}
 
-        if (par->njump) {
+        if (par->njump && !par->psi_jump_fixed) {
           for (unsigned  l=0; l<par->njump; l++) {
 	    Cube[npar] = par->psi_jumps[l] * RAD_TO_DEG;
             npar++;
