@@ -2,13 +2,20 @@ bin_PROGRAMS =
 
 lib_LTLIBRARIES=
 
+libRVMnest_la_SOURCES = get_globalRVM_chi2.C
+libRVMnest_la_LIBADD = @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@
 
 if HAVE_MULTINEST
 lib_LTLIBRARIES += libRVMnest.la
 bin_PROGRAMS += globalRVMnest RVMnest
 
-libRVMnest_la_SOURCES = simpleParameters.C Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C get_globalRVM_chi2.C read_results.C globalRVM_likelihood_PC.C polychord_c_interface.C
-libRVMnest_la_LIBADD = @FFTW_LIBS@ @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@ @MINUIT_LIBS@ @MULTINEST_LIBS@
+libRVMnest_la_SOURCES += simpleParameters.C Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C read_results.C
+libRVMnest_la_LIBADD += @FFTW_LIBS@ @MINUIT_LIBS@ @MULTINEST_LIBS@
+endif
+
+if HAVE_POLYCHORD
+libRVMnest_la_SOURCES += globalRVM_likelihood_PC.C polychord_c_interface.C
+libRVMnest_la_LIBADD += @POLYCHORD_LIBS@
 endif
 
 if HAVE_MINUIT
@@ -20,6 +27,10 @@ libRVMnuit_la_LIBADD = @FFTW_LIBS@ @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@ @M
 endif
 
 AM_CPPFLAGS = -I@top_srcdir@/ @FFTW_CFLAGS@  @CFITSIO_CFLAGS@ @PSRCHIVE_CFLAGS@  @GLIB_CFLAGS@ @MINUIT_CFLAGS@ @MULTINEST_CFLAGS@ 
+if HAVE_POLYCHORD
+AM_CPPFLAGS += @POLYCHORD_CFLAGS@
+endif
+
 
 if HAVE_MULTINEST
 globalRVMnest_SOURCES = globalRVMnest.C

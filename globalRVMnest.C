@@ -22,9 +22,10 @@
 
 using namespace std;
 using namespace Pulsar;
-
+#ifdef HAVE_POLYCHORD
 #include "interfaces.hpp"
 #include "globalRVM_likelihood_PC.h"
+#endif
 MNStruct *sp;
 
 /************************************************* dumper routine ******************************************************/
@@ -331,6 +332,7 @@ int main(int argc, char *argv[])
 	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, filename, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, globalRVMLogLike, dumper, context);
 	}
 	else if (sampler==1) {
+#ifdef HAVE_POLYCHORD
 	  Settings settings;
           settings.nDims         = ndims;
           settings.nDerived      = 1;
@@ -355,7 +357,10 @@ int main(int argc, char *argv[])
           //setup_loglikelihood();                                                                             
           sp = par;
           run_polychord(globalRVMLogLike_PC, prior, settings) ;
-
+#else
+	  cerr << "PolyChord library not detected during configure. Aborting! "<< endl;
+	  return(-1);
+#endif
 	}
 	
 
@@ -367,7 +372,7 @@ int main(int argc, char *argv[])
 
 	MPI_Finalize();
 
-
+	return(0);
 }
 
 /***********************************************************************************************************************/
