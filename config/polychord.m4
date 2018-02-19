@@ -195,6 +195,15 @@ void run_polychord(
       AC_LANG_POP(C++)
   fi
 
+    if test x"$compile_polychord" = xyes; then
+      AC_MSG_WARN([***************************************************************])
+      AC_MSG_WARN([PolyChord code can be compiled, but it cannot be run. This most])
+      AC_MSG_WARN([Assumes itś a MPI issue at runtime and move on.])
+      AC_MSG_WARN([***************************************************************])
+      have_polychord=yes
+    fi
+
+
   AC_MSG_CHECKING([for PolyChord installation])
   AC_MSG_RESULT($have_polychord)
 
