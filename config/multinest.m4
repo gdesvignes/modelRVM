@@ -114,6 +114,14 @@ AC_DEFUN([SWIN_LIB_MULTINEST],
       AC_LANG_POP(C++)
   fi
 
+  if test x"$compile_multinest" = xyes; then
+	have_multinest=yes
+      AC_MSG_WARN([***************************************************************])
+      AC_MSG_WARN([MultiNest code can be compiled, but it cannot be run.])
+      AC_MSG_WARN([We assume to continue])
+      AC_MSG_WARN([***************************************************************])
+  fi
+
   AC_MSG_CHECKING([for MultiNest installation])
   AC_MSG_RESULT($have_multinest)
 
