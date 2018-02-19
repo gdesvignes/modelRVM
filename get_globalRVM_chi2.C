@@ -34,6 +34,8 @@ using namespace std;
 void get_globalRVM_chi2(MNStruct *par) {
 
 	char label[16];	
+	int ie=0;
+	int ix = 0;
 	int totnbpts=0;
 	double Qu,Uu;
         double Ln, PA2;
@@ -99,15 +101,18 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 	    xsi = par->alpha + beta;
 	    
-	    Qu = rmsQ*rmsQ*par->efac[j]*par->efac[j];
-	    Uu = rmsU*rmsU*par->efac[j]*par->efac[j];
+	    if (par->epoch[j]<56000) ie = 0;
+	    else ie = 1;
+	    
+	    Qu = rmsQ*rmsQ*par->efac[ie]*par->efac[ie];
+	    Uu = rmsU*rmsU*par->efac[ie]*par->efac[ie];
 
-	    par->Ltot = 0.;
+	    //if (par->epoch[j] < 57700) ix ++;
 
 	    for(unsigned int i = 0; i < par->npts[j]; i++) {
 		double phi_off = 0.0;
-		if (par->have_aberr_offset && par->phase[j][i] > 90.*DEG_TO_RAD && par->phase[j][i] < 270.*DEG_TO_RAD)
-		    phi_off = par->phi_aberr_offset[j];
+		if (par->epoch[j] < 57700 && par->have_aberr_offset && par->phase[j][i] > 180.*DEG_TO_RAD && par->phase[j][i] < 360.*DEG_TO_RAD)
+		    phi_off = par->phi_aberr_offset[ix];
 		PA2 = 2*get_RVM(par->alpha, beta, par->phi0[j] + phi_off, par->psi00 + eta, par->phase[j][i]);
 
 		cosPA2 = cos(PA2);
@@ -126,10 +131,6 @@ void get_globalRVM_chi2(MNStruct *par) {
 		par->Ltot += Ln;
 	      }
 
-	    if (par->Ltot < 0.0) {
-	      par->psi00 += M_PI /2.;
-	    }
-
 	    if (par->do_plot)
 	      {
 		cout << "File #"<<j << " red. chi2= " << (par->chi-prev_chi)/par->npts[j] << endl;
@@ -143,7 +144,10 @@ void get_globalRVM_chi2(MNStruct *par) {
 		double PA, Lv, Lve;
 		for(unsigned int i = 0; i < par->nbin[j]; i++)
 		  { 
-		    PA2 = get_RVM(par->alpha, beta, par->phi0[j], par->psi00 + eta, (i+.5)/par->nbin[j] * M_PI*2.);
+		    double phi_off = 0.0;
+		    if (par->epoch[j] < 57700 && par->have_aberr_offset && (i+.5)/par->nbin[j]*M_PI*2 > 180.*DEG_TO_RAD && (i+.5)/par->nbin[j]*M_PI*2 < 360.*DEG_TO_RAD)
+		      phi_off = par->phi_aberr_offset[ix];
+		    PA2 = get_RVM(par->alpha, beta, par->phi0[j] + phi_off, par->psi00 + eta, (i+.5)/par->nbin[j]*M_PI*2);
 		    myf << i*360./par->nbin[j] << " "<< par->I[j][i] << " "<< par->L[j][i] << " "<< par->V[j][i]<< " " <<  PA2 * 180./M_PI << endl;
 		  }
 		myf.close();
@@ -163,6 +167,13 @@ void get_globalRVM_chi2(MNStruct *par) {
                   }
                 myf.close();
 	      }
+	    
+	    // Increment for aberration 
+	    if (par->epoch[j] < 57700) ix++;
+	}
+
+	if (par->Ltot < 0.0) {
+	  par->psi00 += M_PI /2.;
 	}
 
 	// Print summary

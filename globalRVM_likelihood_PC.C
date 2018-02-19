@@ -52,9 +52,18 @@ void prior (double cube[], double theta[], int nDims,  void *context)
   ipar++;
   theta[ipar] = cube[ipar] * (sp->r_Phi0[1] - sp->r_Phi0[0]) + sp->r_Phi0[0];
   ipar++;
-  theta[ipar] = cube[ipar] * 180. - 90.;
-  ipar++;
+  
+  if (sp->sin_psi) {
+    theta[ipar] = cube[ipar] * 2 - 1.;
+    ipar++;
+    theta[ipar] = cube[ipar] * 2 - 1;
+    ipar++;
+  } else {
+    theta[ipar] = cube[ipar] * 180 - 90;
+    ipar++;
+  }
 
+  
   // RVM center Phase of the profiles - Can be marginalized                                                                 
   if (!sp->margin_phi0) {
     for (unsigned int j = 0; j < sp->n_epoch; j++) {
@@ -65,8 +74,8 @@ void prior (double cube[], double theta[], int nDims,  void *context)
 
   // include an offset between the PA curves of the MP and IP                                                               
   if (sp->have_aberr_offset) {
-    for (unsigned int j = 0; j < sp->n_epoch; j++) {
-      theta[ipar] = (cube[ipar] * 16 - 8);
+    for (unsigned int j = 0; j < sp->nfiles_aberr; j++) {
+      theta[ipar] = (cube[ipar] * 24 - 12);
       ipar++;
     }
   }
@@ -81,6 +90,14 @@ void prior (double cube[], double theta[], int nDims,  void *context)
   if (!sp->inc_fixed) {
     theta[ipar] = cube[ipar] * (sp->r_inc[1] - sp->r_inc[0]) + sp->r_inc[0];
     ipar++;
+  }
+
+  // EFAC
+  if (sp->have_efac) {
+    for (unsigned int j=0; j < sp->n_epoch; j++) {
+      theta[ipar] = cube[ipar] * (sp->r_efac[1] - sp->r_efac[0]) + sp->r_efac[0];
+      ipar++;
+    }
   }
 
   // Psi0 jumps between different datasets                                                                                  
@@ -110,7 +127,12 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	sp->alpha = theta[ipar] * DEG_TO_RAD; ipar++;
 	sp->delta = theta[ipar] * DEG_TO_RAD; ipar++;
 	sp->phase0 = theta[ipar] * DEG_TO_RAD; ipar++;
-	sp->psi00 = theta[ipar] * DEG_TO_RAD; ipar++;
+	if (sp->sin_psi) {
+	  sp->psi00 = atan2(theta[ipar+1], theta[ipar]);
+	  ipar += 2;
+	} else {
+	  sp->psi00 = theta[ipar] * DEG_TO_RAD; ipar++;
+	}
 
 	// RVM center Phase of the profiles - Can be marginalized
 	if (!sp->margin_phi0) {
@@ -124,7 +146,7 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 
 	// include an offset between the PA curves of the MP and IP
 	if (sp->have_aberr_offset) {
-	    for (unsigned int j = 0; j < sp->n_epoch; j++) {
+	    for (unsigned int j = 0; j < sp->nfiles_aberr; j++) {
 		sp->phi_aberr_offset[j] = theta[ipar] * DEG_TO_RAD;
 		ipar++;
 	    }
@@ -208,12 +230,11 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	get_globalRVM_chi2(sp);
 
 	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
-	if (sp->Ltot < 0.0) {
-	    sp->psi00 += M_PI /2.;
-	}
-	sp->psi00 = atan( tan(sp->psi00) );
-	theta[3] = sp->psi00 / DEG_TO_RAD;
-
+	//if (sp->Ltot < 0.0) {
+	  //sp->psi00 += M_PI /2.;
+	    //}
+	//sp->psi00 = atan( tan(sp->psi00) );
+	//theta[3] = sp->psi00 / DEG_TO_RAD;
 
         lnew = -1.*sp->chi/2 - 0.5*sp->logdetN;
 	return lnew;

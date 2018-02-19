@@ -6,6 +6,7 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
@@ -126,11 +127,14 @@ int main(int argc, char *argv[])
 	int prate_fixed=1;
 	int have_efac=1;
 	int have_aberr_offset=0;
+	int nfiles_aberr = 0;
 	double threshold=1.8;
 	int margin_phi0=0;
 	int nfiles = argc - 1;
 	int psi_jump_fixed=1;
 	int sampler = 0;
+	int sin_psi = 0;
+	int ascii_output =1;
 	
 	int rank, size;
 	MPI_Init(&argc, &argv);
@@ -158,7 +162,7 @@ int main(int argc, char *argv[])
 	  have_aberr_offset = p.have_aberr_offset;
 	  threshold = p.threshold;
 	  margin_phi0 = p.margin_phi0;
-	  
+	  sin_psi = p.sin_psi;
 	  
 	    // Copy config file
 	  sprintf(confname,"%s.config", root);
@@ -217,12 +221,32 @@ int main(int argc, char *argv[])
 	  double ph=0.;
 	  bool skip_bin = false;
 
+	  // 
+	  if (mjd < 57700) nfiles_aberr++;
+
 	  if (rank==0) {
 	    for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
 	      cout << "File #" << i << " : will exclude phase " << p.phs_exclude[i][nphs*2] << " to " <<  p.phs_exclude[i][1 + nphs*2] << endl;
 	  }
 
+	  // 
+	  stringstream str;
+	  ofstream myf;
+	  str << integration->get_epoch().intday();
+	  if (ascii_output) {
+	    string fnf = str.str();
+	    myf.open(fnf.c_str());
+	    myf << scientific;
+	  }
+
 	  for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
+	    if (ascii_output) {
+	      myf << ibin << " ";
+	      for (int ik=0; ik < 4; ik++)
+		myf << integration->get_Profile(ik,0)->get_amps()[ibin]<< " "; 
+	      myf << endl;
+	    }
+
             ph = ibin/(double) archive->get_nbin();
 	
 	    // Add all points to I vector
@@ -244,6 +268,8 @@ int main(int argc, char *argv[])
 
 	    }
 	  }
+	  if (ascii_output) myf.close();
+
 	  cout << "Number of data points " << Q[i].size() << endl;
 	  
 	  MJD.push_back(integration->get_epoch().in_days());
@@ -251,7 +277,6 @@ int main(int argc, char *argv[])
 	  RMS_Q.push_back(rmsQ.get_value());
 	  RMS_U.push_back(rmsU.get_value());
 	}
-	
 	
 	// Init struct
 	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, p.njump);
@@ -267,6 +292,8 @@ int main(int argc, char *argv[])
 	par->have_efac = have_efac;
 	par->have_aberr_offset = have_aberr_offset;
 	par->margin_phi0 = margin_phi0;
+	par->sin_psi = sin_psi;
+	par->nfiles_aberr = nfiles_aberr;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
 		
 	ndims = nPar = 4;
@@ -274,8 +301,9 @@ int main(int argc, char *argv[])
 	//ndims+=nfiles; nPar+=nfiles;  // nfiles for phi0
 	if (!par->prate_fixed) {ndims+=1; nPar+=1;}
 	if (!par->inc_fixed) {ndims+=1; nPar+=1;}
-	if (par->have_efac) {ndims+=nfiles; nPar+=nfiles;}
-	if (par->have_aberr_offset) {ndims+=nfiles; nPar+=nfiles;}
+	if (par->have_efac) {ndims+=2; nPar+=2;}
+	if (par->have_aberr_offset) {ndims+=nfiles_aberr; nPar+=nfiles_aberr;}
+	if (par->sin_psi) {ndims+=1; nPar+=1;}
 
 	par->njump = 0;
 	// Copy the range of parameters
@@ -308,8 +336,8 @@ int main(int argc, char *argv[])
 	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
 	if (par->r_delta[0]==0 && par->r_delta[0]==180.) pWrap[1] = 1;
 	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==180.) pWrap[2] = 1;
-        pWrap[3] = 1;
-
+        if (!par->sin_psi) pWrap[3] = 1;
+	
 	if (rank==0) {
 	  // calling MultiNest
 	  cout << endl << " -- Parameters -- " << endl;
@@ -322,6 +350,7 @@ int main(int argc, char *argv[])
 	  cout << "Margin_phi0 = " << margin_phi0 << endl;
 	  cout << "nlive = " << nlive << endl;
 	  cout << "ndims = " << ndims << endl;
+	  cout << "sin_psi = " << sin_psi << endl;
 	  cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
 	  for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
 	  cout << "Psi_jump fixed = " << psi_jump_fixed << endl;

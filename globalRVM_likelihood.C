@@ -47,7 +47,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	char label[16];	
 	double Qu,Uu;
         double chi = 0.0, Ln, PA2;
-	double Ltot = 0., logdetN = 0.;
+	double Ltot = 0.;
 	double cosPA2, sinPA2;
 	complex <double> L, arg;
 	double phi, eta, xsi;
@@ -94,12 +94,12 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
 	// EFACs
 	if (par->have_efac) {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) {
-	        par->efac[j] = Cube[npar] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0];
-		npar++;
-	    }
+	  for (unsigned int j = 0; j < 2; j++) {
+	    par->efac[j] = Cube[npar] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0];
+	    npar++;
+	  }
 	} else {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) par->efac[j] = 1.;
+	  for (unsigned int j = 0; j < 2; j++) par->efac[j] = 1.;
 	}
 
 	// Psi0 jumps between different datasets
@@ -199,7 +199,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	}
 
 	if (par->have_efac) {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) {
+	    for (unsigned int j = 0; j < 2; j++) {
 	        Cube[npar] = par->efac[j];
 		npar++;
 	    }
@@ -211,7 +211,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
             npar++;
           }
         }
-
+	
         lnew = -1.*par->chi/2 - 0.5*par->logdetN;
 	//free(par->psi_jumps);
 }
