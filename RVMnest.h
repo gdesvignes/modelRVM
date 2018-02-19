@@ -22,11 +22,14 @@ typedef struct {
   int inc_fixed;
   int have_efac;
   int have_aberr_offset;
+  int nfiles_aberr;
   int margin_phi0;
   int psi_jump_fixed;
   int do_plot;
+  int sin_psi;
   
   double alpha;   /*  par[0] */
+  double beta;
   double delta;   /*  par[1] */
   double phase0;  /* */
   double inc;             /* Orbital inclination */
@@ -74,6 +77,7 @@ MNStruct* init_struct(int nfiles, std::vector<std::vector<double> > x, std::vect
 void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void get_globalRVM_chi2(MNStruct *par);
+void get_RVM_chi2(MNStruct *par);
 double get_RVM(const double &al, const double &be, const double &ph0, const double &ps0, const double &x);
 
 

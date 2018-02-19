@@ -9,6 +9,7 @@
 #include "multinest.h"
 #include "Parameters.h"
 #include "RVMnest.h"
+#include "read_results.h"
 
 // psrchive stuff
 #include "Pulsar/Archive.h"
@@ -198,6 +199,8 @@ int main(int argc, char *argv[])
 	// Init struct
 	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, 0);
 	MNStruct *par = ((MNStruct *)context);
+	par->do_plot = 0;
+	par->epoch[0] = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
 
 	// Copy the range of parameters
         if (rv == EXIT_SUCCESS) {
@@ -215,6 +218,11 @@ int main(int argc, char *argv[])
 	// calling MultiNest
 	nested::run(IS, mmodal, ceff, nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
 	logZero, maxiter, RVMLogLike, dumper, context);
+
+
+	read_statsRVM(root, nPar, par);
+
+	get_RVM_chi2(par);
 }
 
 /***********************************************************************************************************************/

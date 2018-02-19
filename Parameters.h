@@ -15,7 +15,8 @@ typedef struct param {
     double threshold;
     int margin_phi0;  
     int have_aberr_offset;
-    
+    int sin_psi;
+
     // Params
     double *alpha;
     double *beta;

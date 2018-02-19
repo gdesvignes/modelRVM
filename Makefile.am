@@ -2,7 +2,7 @@ bin_PROGRAMS =
 
 lib_LTLIBRARIES=
 
-libRVMnest_la_SOURCES = get_globalRVM_chi2.C
+libRVMnest_la_SOURCES = get_globalRVM_chi2.C get_RVM_chi2.C
 libRVMnest_la_LIBADD = @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@
 
 if HAVE_MULTINEST
@@ -32,12 +32,15 @@ AM_CPPFLAGS += @POLYCHORD_CFLAGS@
 endif
 
 
-if HAVE_MULTINEST
 globalRVMnest_SOURCES = globalRVMnest.C
 globalRVMnest_LDADD = libRVMnest.la
 
 RVMnest_SOURCES = RVMnest.C
 RVMnest_LDADD = libRVMnest.la
+
+
+if HAVE_POLYCHORD
+globalRVMnest_LDADD +=  @POLYCHORD_LIBS@
 endif
 
 if HAVE_MINUIT

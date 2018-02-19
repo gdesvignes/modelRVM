@@ -52,7 +52,11 @@ int read_stats(char *root, int npar, MNStruct *p)
 	p->alpha = cols[ipar] * M_PI/180.; ipar++;
 	p->delta = cols[ipar] * M_PI/180.; ipar++;
         p->phase0 = cols[ipar] * M_PI/180.; ipar++;
-        p->psi00 = cols[ipar] * M_PI/180.; ipar++;
+	if (p->sin_psi) {
+	  p->psi00 = atan2(cols[ipar+1], cols[ipar]); ipar+=2;
+	} else {
+	  p->psi00 = cols[ipar] * M_PI/180.; ipar++;
+	}
 
 	// Set RVM phase
 	if(!p->margin_phi0)
@@ -65,7 +69,7 @@ int read_stats(char *root, int npar, MNStruct *p)
 
 	if (p->have_aberr_offset)
 	  {
-	    for (unsigned int j = 0; j < p->n_epoch; j++)
+	    for (unsigned int j = 0; j < p->nfiles_aberr; j++)
 	      {
 		p->phi_aberr_offset[j] = cols[ipar] * M_PI/180.; ipar++;
 	      }
@@ -106,6 +110,61 @@ int read_stats(char *root, int npar, MNStruct *p)
     {
       cout << "Phi  = " << p->phi0[j] * 180./M_PI << endl;
     }    
+  cout << "Likelihood = " << likelihood << endl;
+  
+  return(0);
+}
+
+
+int read_statsRVM(char *root, int npar, MNStruct *p)
+{
+
+  int ipar=0,lpar=npar;
+  string line;
+  char filename[256];
+  double likelihood=-numeric_limits<double>::max();
+  double val, val_err;
+
+  cout << "Reading results " << endl;
+
+  sprintf(filename, "%sphys_live.points", root);
+
+  ifstream stats(filename);
+
+  // Ask to output the result
+  p->do_plot = 1;
+
+  if (!stats.is_open())
+    {
+      cerr << "Error opening file "<<filename << endl;
+      return(-1);
+    }
+
+  while (getline(stats, line)) 
+    {
+      istringstream iss(line);
+      vector<double> cols{istream_iterator<double>{iss},
+	  istream_iterator<double>{}};
+
+      ipar = 0;
+      if (cols[lpar] > likelihood) {
+	likelihood = cols[lpar];
+
+	p->alpha = cols[ipar] * M_PI/180.; ipar++;
+	p->beta = cols[ipar] * M_PI/180.; ipar++;
+        p->phi0[0] = cols[ipar] * M_PI/180.; ipar++;
+	p->psi0 = cols[ipar] * M_PI/180.; ipar++;
+
+
+      }
+    }
+  
+  cout << "Finished reading stats file "<< filename << endl;
+  cout << "Alpha = " << p->alpha * 180./M_PI << endl
+       << "Beta = " << p->beta * 180./M_PI << endl
+       << "Phi0 = " << p->phi0[0] * 180./M_PI << endl
+       << "Psi0 = " << p->psi0 * 180./M_PI << endl;
+
   cout << "Likelihood = " << likelihood << endl;
   
   return(0);
