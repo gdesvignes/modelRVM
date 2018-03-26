@@ -114,6 +114,7 @@ int main(int argc, char *argv[])
 							// has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 	double threshold=1.0;
+	int have_efac=0;
 	int nfiles = 1;
 	vector< vector<double> > phase, I, Q, U, L, V;
 	vector <int> nbin;
@@ -131,6 +132,7 @@ int main(int argc, char *argv[])
 	  efr = p.efr;
 	  strcpy(tmproot, p.basename);
 	  threshold = p.threshold;
+	  have_efac = p.have_efac;
 	}
 
 	strcpy(filename, argv[1]);
@@ -200,14 +202,17 @@ int main(int argc, char *argv[])
 	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, 0);
 	MNStruct *par = ((MNStruct *)context);
 	par->do_plot = 0;
+	par->have_efac = have_efac;
 	par->epoch[0] = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
 
+	if (par->have_efac) {ndims+=1; nPar+=1;}
 	// Copy the range of parameters
         if (rv == EXIT_SUCCESS) {
 	  par->r_alpha = p.alpha;
 	  par->r_beta = p.beta;
 	  par->r_phi0 = p.phi0;
 	  par->r_psi0 = p.psi0;
+	  par->r_efac = p.efac;
 	} else {
 	  par->r_alpha = NULL;
 	  par->r_beta = NULL;

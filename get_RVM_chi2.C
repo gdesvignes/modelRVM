@@ -25,25 +25,25 @@ void get_RVM_chi2(MNStruct *par) {
 	double rmsQ = par->rmsQ[0];
 	double rmsU = par->rmsU[0];
 	double Ltot = 0.0;
+	double Qu,Uu;
 
-	//alpha = 100 * DEG_TO_RAD;
-	//beta = -16 * DEG_TO_RAD;
-	//phi0 = 90 * DEG_TO_RAD;
-	//psi0 = 10 * DEG_TO_RAD;
-
+	par->logdetN = 0.0;
 	par-> chi = 0.0;
-	//cout << alpha / DEG_TO_RAD << " " << beta  / DEG_TO_RAD<< " "<< phi0  / DEG_TO_RAD << " " << rmsQ << endl;
+	
+	Qu = rmsQ*rmsQ*par->efac[0]*par->efac[0];
+	Uu = rmsU*rmsU*par->efac[0]*par->efac[0];
 
 	for(unsigned int i = 0; i < par->npts[0]; i++) {
 		PA = get_RVM(alpha, beta, phi0, psi0, par->phase[0][i]);
 		//cout << alpha / DEG_TO_RAD << " " << beta  / DEG_TO_RAD<< " "<< phi0  / DEG_TO_RAD << " " << rmsQ << " " << PA << endl;
-		Ln = (par->Q[0][i]*cos(2*PA) / (rmsQ*rmsQ) + par->U[0][i]*sin(2*PA) / (rmsU*rmsU)) 
-			/ (cos(2*PA)*cos(2*PA) / (rmsQ*rmsQ) + sin(2*PA)*sin(2*PA) / (rmsU*rmsU));
+		Ln = (par->Q[0][i]*cos(2*PA) / Qu + par->U[0][i]*sin(2*PA) / Uu) 
+			/ (cos(2*PA)*cos(2*PA) / Qu + sin(2*PA)*sin(2*PA) / Uu);
 
 		arg = complex<double>(0., 2 * PA);
 		L =  Ln * exp (arg);
-		par->chi += (par->Q[0][i]-real(L))*(par->Q[0][i]-real(L))/(rmsQ*rmsQ)
-			+ (par->U[0][i]-imag(L))*(par->U[0][i]-imag(L))/(rmsU*rmsU);
+		par->chi += (par->Q[0][i]-real(L))*(par->Q[0][i]-real(L))/Qu
+			+ (par->U[0][i]-imag(L))*(par->U[0][i]-imag(L))/Uu;
+		par->logdetN += log(Uu) + log(Qu);
 		Ltot += Ln;
 	}	
 	//cout << par->chi << endl;
@@ -91,6 +91,5 @@ void get_RVM_chi2(MNStruct *par) {
 	  cout << "Final Chi2 : " << par->chi<< endl;
 	  cout << "Tot nbpts: " << par->npts[0] << endl;
 	}
-	//exit(0);
 	    
 }

@@ -31,6 +31,7 @@ int readsimpleParameters(param *p, char *paramFile){
     p->beta = g_key_file_get_double_list(gkf,"params","beta", &length, NULL);
     p->phi0 = g_key_file_get_double_list(gkf,"params","phi0", &length, NULL);
     p->psi0 = g_key_file_get_double_list(gkf,"params","psi0", &length, NULL);
+    p->efac = g_key_file_get_double_list(gkf,"params","efac", &length, NULL);
 
     // Read the range of phases to be excluded
     p->phs_exclude = (double **) malloc( p->numfiles * sizeof(double *));
