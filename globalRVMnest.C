@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 	//ndims+=nfiles; nPar+=nfiles;  // nfiles for phi0
 	if (!par->prate_fixed) {ndims+=1; nPar+=1;}
 	if (!par->inc_fixed) {ndims+=1; nPar+=1;}
-	if (par->have_efac) {ndims+=2; nPar+=2;}
+	if (par->have_efac) {ndims+=1; nPar+=1;}
 	if (par->have_aberr_offset) {ndims+=nfiles_aberr; nPar+=nfiles_aberr;}
 	if (par->sin_psi) {ndims+=1; nPar+=1;}
 

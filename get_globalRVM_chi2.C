@@ -101,8 +101,9 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 	    xsi = par->alpha + beta;
 	    
-	    if (par->epoch[j]<56000) ie = 0;
-	    else ie = 1;
+	    //if (par->epoch[j]<56000) ie = 0;
+	    //else ie = 1;
+	    ie=0;
 	    
 	    Qu = rmsQ*rmsQ*par->efac[ie]*par->efac[ie];
 	    Uu = rmsU*rmsU*par->efac[ie]*par->efac[ie];

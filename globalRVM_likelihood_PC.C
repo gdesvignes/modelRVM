@@ -94,7 +94,7 @@ void prior (double cube[], double theta[], int nDims,  void *context)
 
   // EFAC
   if (sp->have_efac) {
-    for (unsigned int j=0; j < sp->n_epoch; j++) {
+    for (unsigned int j=0; j < 1; j++) {
       theta[ipar] = cube[ipar] * (sp->r_efac[1] - sp->r_efac[0]) + sp->r_efac[0];
       ipar++;
     }
@@ -166,12 +166,12 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	
 	// EFACs
 	if (sp->have_efac) {
-	    for (unsigned int j = 0; j < sp->n_epoch; j++) {
+	    for (unsigned int j = 0; j <1; j++) {
 	        sp->efac[j] = theta[ipar];
 		ipar++;
 	    }
 	} else {
-	    for (unsigned int j = 0; j < sp->n_epoch; j++) sp->efac[j] = 1.;
+	    for (unsigned int j = 0; j < 1; j++) sp->efac[j] = 1.;
 	}
 
 	// Psi0 jumps between different datasets
