@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 		U[0].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
 		L[0].push_back( sqrt(U[0].back()*U[0].back() + Q[0].back()*Q[0].back()));
 		V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
-		cout << ibin << " " <<I[0].back() << endl;
+		//cout << ibin << " " <<I[0].back() << endl;
 	    }
 	}
 
