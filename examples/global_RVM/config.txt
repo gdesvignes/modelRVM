@@ -1,3 +1,7 @@
+[sampler]
+# Sampler=0 (Multinest), sampler=1 (PolyChord)
+sampler=0
+
 [multinest]
 IS=0
 nlive=4000
@@ -10,6 +14,9 @@ threshold=0.5
 
 # Include individual EFAC for the profiles
 have_efac=0
+
+# Include phase offset in RVM
+have_aberr_offset=0
 
 # Margin over Phi0
 margin_phi0=0
@@ -43,7 +50,7 @@ r_psi_jump=75;105
 
 
 [data]
-numfiles=13
+# Phase ranges to exclude from modelling
 phs_exclude_0=0.0111;0.47;0.542178;0.986787
 phs_exclude_1=0.0111;0.47;0.542178;0.986787
 phs_exclude_2=0.0111;0.47;0.542178;0.986787

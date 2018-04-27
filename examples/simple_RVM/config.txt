@@ -1,3 +1,7 @@
+[sampler]
+# Sampler=0 (Multinest), sampler=1 (PolyChord)
+sampler=0
+
 [multinest]
 IS=0
 nlive=2000
@@ -8,18 +12,22 @@ basename=results
 [config]
 threshold=1.5
 
-# Include individual EFAC for the profiles
+# Include EFAC
 have_efac=0
 
+# Include phase offset in RVM
+have_aberr_offset=0
+
 [params]
+# Range of priors for parameters of interest
 alpha=90;150
-#delta=20;170
-#psi0=0;50
+beta=20;170
 phi0=2;14
+psi0=0;50
 
 # EFAC
 efac=0.4;4
 
 [data]
-numfiles=1
+# Phase ranges to exclude from modelling
 phs_exclude_0=0.04;0.45;0.58;0.94
