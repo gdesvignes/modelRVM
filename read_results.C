@@ -26,7 +26,7 @@ int read_stats(char *root, int npar, MNStruct *p)
     lpar--;
   }
   else
-  sprintf(filename, "%s/chainsPC_phys_live.txt", root);
+    sprintf(filename, "%s/chainsPC_phys_live.txt", root); lpar--;
 
   ifstream stats(filename);
 

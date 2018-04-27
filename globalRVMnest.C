@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
 	int pWrap[ndims];
 	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
 	if (par->r_delta[0]==0 && par->r_delta[0]==180.) pWrap[1] = 1;
-	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==180.) pWrap[2] = 1;
+	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==360.) pWrap[2] = 1;
         if (!par->sin_psi) pWrap[3] = 1;
 	
 	if (rank==0) {
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_POLYCHORD
 	  Settings settings;
           settings.nDims         = ndims;
-          settings.nDerived      = 1;
+          settings.nDerived      = 0;
           settings.nlive         = 500;
           settings.num_repeats   = settings.nDims*5;
           settings.do_clustering = false;
