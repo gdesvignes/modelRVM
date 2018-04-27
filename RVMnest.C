@@ -206,6 +206,8 @@ int main(int argc, char *argv[])
 	par->epoch[0] = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
 
 	if (par->have_efac) {ndims+=1; nPar+=1;}
+	if (par->have_aberr_offset) {ndims+=1; nPar+=1;}
+
 	// Copy the range of parameters
         if (rv == EXIT_SUCCESS) {
 	  par->r_alpha = p.alpha;

@@ -29,22 +29,30 @@ void get_RVM_chi2(MNStruct *par) {
 
 	par->logdetN = 0.0;
 	par-> chi = 0.0;
+	double phi_off;
 	
 	Qu = rmsQ*rmsQ*par->efac[0]*par->efac[0];
 	Uu = rmsU*rmsU*par->efac[0]*par->efac[0];
 
 	for(unsigned int i = 0; i < par->npts[0]; i++) {
-		PA = get_RVM(alpha, beta, phi0, psi0, par->phase[0][i]);
-		//cout << alpha / DEG_TO_RAD << " " << beta  / DEG_TO_RAD<< " "<< phi0  / DEG_TO_RAD << " " << rmsQ << " " << PA << endl;
-		Ln = (par->Q[0][i]*cos(2*PA) / Qu + par->U[0][i]*sin(2*PA) / Uu) 
-			/ (cos(2*PA)*cos(2*PA) / Qu + sin(2*PA)*sin(2*PA) / Uu);
 
-		arg = complex<double>(0., 2 * PA);
-		L =  Ln * exp (arg);
-		par->chi += (par->Q[0][i]-real(L))*(par->Q[0][i]-real(L))/Qu
-			+ (par->U[0][i]-imag(L))*(par->U[0][i]-imag(L))/Uu;
-		par->logdetN += log(Uu) + log(Qu);
-		Ltot += Ln;
+	  // Offset in phase between the two RVM inflexion points. The offset is set at phase 180 deg.
+	  if (par->have_aberr_offset && par->phase[0][i] > 180.*DEG_TO_RAD && par->phase[0][i] < 360.*DEG_TO_RAD)
+	    phi_off = par->phi_aberr_offset[0];
+	  else phi_off = 0.0;
+
+
+	  PA = get_RVM(alpha, beta, phi0 + phi_off, psi0, par->phase[0][i]);
+	  //cout << alpha / DEG_TO_RAD << " " << beta  / DEG_TO_RAD<< " "<< phi0  / DEG_TO_RAD << " " << rmsQ << " " << PA << endl;
+	  Ln = (par->Q[0][i]*cos(2*PA) / Qu + par->U[0][i]*sin(2*PA) / Uu) 
+	    / (cos(2*PA)*cos(2*PA) / Qu + sin(2*PA)*sin(2*PA) / Uu);
+	  
+	  arg = complex<double>(0., 2 * PA);
+	  L =  Ln * exp (arg);
+	  par->chi += (par->Q[0][i]-real(L))*(par->Q[0][i]-real(L))/Qu
+	    + (par->U[0][i]-imag(L))*(par->U[0][i]-imag(L))/Uu;
+	  par->logdetN += log(Uu) + log(Qu);
+	  Ltot += Ln;
 	}	
 	//cout << par->chi << endl;
 
@@ -68,7 +76,10 @@ void get_RVM_chi2(MNStruct *par) {
 	  double Lv, Lve;
 	  for(unsigned int i = 0; i < par->nbin[0]; i++)
 	    {
-	      PA = get_RVM(alpha, beta, phi0, psi0, (i+.5)/par->nbin[0]*M_PI*2);
+	      if (par->have_aberr_offset && par->phase[0][i] > 180.*DEG_TO_RAD && par->phase[0][i] < 360.*DEG_TO_RAD)
+		phi_off = par->phi_aberr_offset[0];
+	      else phi_off = 0.0;
+	      PA = get_RVM(alpha, beta, phi0+phi_off, psi0, (i+.5)/par->nbin[0]*M_PI*2);
 	      myf << i*360./par->nbin[0] << " "<< par->I[0][i] << " "<< par->L[0][i] << " "<< par->V[0][i]<< " " <<  PA * 180./M_PI << endl;
 	    }
 	  myf.close();

@@ -155,6 +155,13 @@ int read_statsRVM(char *root, int npar, MNStruct *p)
         p->phi0[0] = cols[ipar] * M_PI/180.; ipar++;
 	p->psi0 = cols[ipar] * M_PI/180.; ipar++;
 
+	if (p->have_efac) {
+	  p->efac[0] = cols[ipar]; ipar++;
+	}
+
+	if (p->have_aberr_offset) {
+	  p->phi_aberr_offset[0] = cols[ipar] * M_PI/180.; ipar++;
+	}
 
       }
     }
@@ -164,6 +171,11 @@ int read_statsRVM(char *root, int npar, MNStruct *p)
        << "Beta = " << p->beta * 180./M_PI << endl
        << "Phi0 = " << p->phi0[0] * 180./M_PI << endl
        << "Psi0 = " << p->psi0 * 180./M_PI << endl;
+  if (p->have_efac)
+    cout << "EFAC = " << p->efac[0] << endl;
+  if (p->have_aberr_offset) 
+    cout << "Aberr offset (at phase 180 deg) = " << p->phi_aberr_offset[0] * 180./M_PI << endl;
+  
 
   cout << "Likelihood = " << likelihood << endl;
   
