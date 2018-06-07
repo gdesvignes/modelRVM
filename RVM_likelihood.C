@@ -32,23 +32,27 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 
 	MNStruct *par = ((MNStruct *)context);
 
+	int ipar = 0;
+	if (par->r_alpha==NULL) par->alpha = Cube[ipar] * M_PI;
+	else par->alpha = Cube[ipar] * (par->r_alpha[1]*DEG_TO_RAD - par->r_alpha[0]*DEG_TO_RAD) + par->r_alpha[0]*DEG_TO_RAD;
+	ipar++;
 
-	if (par->r_alpha==NULL) par->alpha = Cube[0] * M_PI;
-	else par->alpha = Cube[0] * (par->r_alpha[1]*DEG_TO_RAD - par->r_alpha[0]*DEG_TO_RAD) + par->r_alpha[0]*DEG_TO_RAD;
+	if (par->r_beta==NULL) par->beta = Cube[ipar] * M_PI - M_PI/2.;
+	else par->beta = Cube[ipar] * (par->r_beta[1]*DEG_TO_RAD - par->r_beta[0]*DEG_TO_RAD) + par->r_beta[0]*DEG_TO_RAD;
+	ipar++;
 
-	if (par->r_beta==NULL) par->beta = Cube[1] * M_PI - M_PI/2.;
-	else par->beta = Cube[1] * (par->r_beta[1]*DEG_TO_RAD - par->r_beta[0]*DEG_TO_RAD) + par->r_beta[0]*DEG_TO_RAD;
-	
-	if (par->r_phi0==NULL) par->phi0[0] = Cube[2] * M_PI;
-	else par->phi0[0] = Cube[2] * (par->r_phi0[1]*DEG_TO_RAD - par->r_phi0[0]*DEG_TO_RAD) + par->r_phi0[0]*DEG_TO_RAD;
+	if (par->r_phi0==NULL) par->phi0[0] = Cube[ipar] * M_PI;
+	else par->phi0[0] = Cube[ipar] * (par->r_phi0[1]*DEG_TO_RAD - par->r_phi0[0]*DEG_TO_RAD) + par->r_phi0[0]*DEG_TO_RAD;
+	ipar++;
 
-	if (par->r_psi0==NULL) par->psi0 = Cube[3] * M_PI;
-	else par->psi0 = Cube[3] * (par->r_psi0[1]*DEG_TO_RAD - par->r_psi0[0]*DEG_TO_RAD) + par->r_psi0[0]*DEG_TO_RAD;
+	if (par->r_psi0==NULL) par->psi0 = Cube[ipar] * M_PI;
+	else par->psi0 = Cube[ipar] * (par->r_psi0[1]*DEG_TO_RAD - par->r_psi0[0]*DEG_TO_RAD) + par->r_psi0[0]*DEG_TO_RAD;
+	ipar++;
 
-	if (par->have_efac) par->efac[0] = Cube[4] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0];
+	if (par->have_efac) {par->efac[0] = Cube[ipar] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0]; ipar++;}
 	else par->efac[0] = 1.0;
 
-	if  (par->have_aberr_offset) par->phi_aberr_offset[0] = (Cube[5] * 40-20)*DEG_TO_RAD ;
+	if  (par->have_aberr_offset) {par->phi_aberr_offset[0] = (Cube[ipar] * 40-20)*DEG_TO_RAD ;ipar++;}
 	else par->phi_aberr_offset[0] = 0.0;
 
         get_RVM_chi2(par);
@@ -57,8 +61,9 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	Cube[1] = par->beta / DEG_TO_RAD;
 	Cube[2] = par->phi0[0] / DEG_TO_RAD;
 	Cube[3] = par->psi0 / DEG_TO_RAD;
-	if (par->have_efac) Cube[4] = par->efac[0];
-	if (par->have_aberr_offset) Cube[5] = par->phi_aberr_offset[0] / DEG_TO_RAD;
+	ipar=4;
+	if (par->have_efac) {Cube[ipar] = par->efac[0];ipar++;}
+	if (par->have_aberr_offset) {Cube[ipar] = par->phi_aberr_offset[0] / DEG_TO_RAD;ipar++;}
 
         lnew = -par->chi/2 - 0.5*par->logdetN;;
 }

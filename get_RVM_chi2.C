@@ -76,7 +76,7 @@ void get_RVM_chi2(MNStruct *par) {
 	  double Lv, Lve;
 	  for(unsigned int i = 0; i < par->nbin[0]; i++)
 	    {
-	      if (par->have_aberr_offset && par->phase[0][i] > 180.*DEG_TO_RAD && par->phase[0][i] < 360.*DEG_TO_RAD)
+	      if (par->have_aberr_offset && (i+.5)/par->nbin[0]*M_PI*2 > 180.*DEG_TO_RAD && (i+.5)/par->nbin[0]*M_PI*2 < 360.*DEG_TO_RAD)
 		phi_off = par->phi_aberr_offset[0];
 	      else phi_off = 0.0;
 	      PA = get_RVM(alpha, beta, phi0+phi_off, psi0, (i+.5)/par->nbin[0]*M_PI*2);
