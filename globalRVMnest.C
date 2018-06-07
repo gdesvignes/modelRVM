@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	int psi_jump_fixed=1;
 	int sampler = 0;
 	int sin_psi = 0;
-	int ascii_output =1;
+	int ascii_output =0;
 	
 	int rank, size;
 	MPI_Init(&argc, &argv);
