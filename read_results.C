@@ -53,7 +53,7 @@ int read_stats(char *root, int npar, MNStruct *p)
 	p->delta = cols[ipar] * M_PI/180.; ipar++;
         p->phase0 = cols[ipar] * M_PI/180.; ipar++;
 	if (p->sin_psi) {
-	  p->psi00 = atan2(cols[ipar+1], cols[ipar]); ipar+=2;
+	  p->psi00 = atan(cols[ipar+1]/ cols[ipar]); ipar+=2;
 	} else {
 	  p->psi00 = cols[ipar] * M_PI/180.; ipar++;
 	}

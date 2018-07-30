@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <complex>
+#include <float.h>
 
 #include "RVMnest.h"
 
@@ -49,7 +50,7 @@ void get_globalRVM_chi2(MNStruct *par) {
         double rmsU;
 	double prev_chi = 0.0;
 	stringstream s;
-
+	ofstream myf;
 	par->chi = 0.0;
 	par->Ltot = 0.0;
 	par->logdetN = 0.0;
@@ -87,7 +88,7 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 	    // Take into account Psi Jumps
 	    for(unsigned l=0; l<par->njump; l++) {
-	      if (par->epoch[j] > par->psi_jump_MJD[l]) eta += par->psi_jumps[l] ;
+	      if (par->psi_jump_MJD[2*l] < par->epoch[j] && par->epoch[j] < par->psi_jump_MJD[2*l+1]) eta += par->psi_jumps[l] ;
 	    }
 
 	    if (VERBOSE)
@@ -101,18 +102,19 @@ void get_globalRVM_chi2(MNStruct *par) {
 
 	    xsi = par->alpha + beta;
 	    
-	    //if (par->epoch[j]<56000) ie = 0;
-	    //else ie = 1;
 	    ie=0;
-	    
-	    Qu = rmsQ*rmsQ*par->efac[ie]*par->efac[ie];
-	    Uu = rmsU*rmsU*par->efac[ie]*par->efac[ie];
+	    Qu = rmsQ*rmsQ;
+	    Uu = rmsU*rmsU;
+	    if (par->have_efac) {
+	      Qu *= par->efac[ie]*par->efac[ie];
+	      Uu *= par->efac[ie]*par->efac[ie];
+	    }
 
 	    //if (par->epoch[j] < 57700) ix ++;
 
 	    for(unsigned int i = 0; i < par->npts[j]; i++) {
 		double phi_off = 0.0;
-		if (par->epoch[j] < 57700 && par->have_aberr_offset && par->phase[j][i] > 180.*DEG_TO_RAD && par->phase[j][i] < 360.*DEG_TO_RAD)
+		if (par->epoch[j] < 57300 && par->have_aberr_offset && par->phase[j][i] > 180.*DEG_TO_RAD && par->phase[j][i] < 360.*DEG_TO_RAD)
 		    phi_off = par->phi_aberr_offset[ix];
 		PA2 = 2*get_RVM(par->alpha, beta, par->phi0[j] + phi_off, par->psi00 + eta, par->phase[j][i]);
 
@@ -140,13 +142,12 @@ void get_globalRVM_chi2(MNStruct *par) {
 		s.str("");
                 s << (int)par->epoch[j]<< "-prof.log";
                 string result = s.str();
-                ofstream myf;
                 myf.open(result.c_str());
 		double PA, Lv, Lve;
 		for(unsigned int i = 0; i < par->nbin[j]; i++)
 		  { 
 		    double phi_off = 0.0;
-		    if (par->epoch[j] < 57700 && par->have_aberr_offset && (i+.5)/par->nbin[j]*M_PI*2 > 180.*DEG_TO_RAD && (i+.5)/par->nbin[j]*M_PI*2 < 360.*DEG_TO_RAD)
+		    if (par->epoch[j] < 57300 && par->have_aberr_offset && (i+.5)/par->nbin[j]*M_PI*2 > 180.*DEG_TO_RAD && (i+.5)/par->nbin[j]*M_PI*2 < 360.*DEG_TO_RAD)
 		      phi_off = par->phi_aberr_offset[ix];
 		    PA2 = get_RVM(par->alpha, beta, par->phi0[j] + phi_off, par->psi00 + eta, (i+.5)/par->nbin[j]*M_PI*2);
 		    myf << i*360./par->nbin[j] << " "<< par->I[j][i] << " "<< par->L[j][i] << " "<< par->V[j][i]<< " " <<  PA2 * 180./M_PI << endl;
@@ -170,7 +171,7 @@ void get_globalRVM_chi2(MNStruct *par) {
 	      }
 	    
 	    // Increment for aberration 
-	    if (par->epoch[j] < 57700) ix++;
+	    if (par->epoch[j] < 57300) ix++;
 	}
 
 	if (par->Ltot < 0.0) {

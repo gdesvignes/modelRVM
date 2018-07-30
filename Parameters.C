@@ -48,7 +48,7 @@ int readParameters(param *p, char *paramFile){
     p->psi_jumps = g_key_file_get_double_list(gkf,"params","psi_jumps", &length, NULL);
     p->r_psi_jump =  g_key_file_get_double_list(gkf,"params","r_psi_jump", &length, NULL);
     p->psi_jump_MJD = g_key_file_get_double_list(gkf,"params","psi_jump_MJD", &length, NULL);
-    p->njump = length;
+    p->njump = length/2;
 
     // Read the range of phases to be excluded
     p->phs_exclude = (double **) malloc( p->numfiles * sizeof(double *));
