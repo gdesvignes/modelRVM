@@ -177,6 +177,10 @@ int main(int argc, char *argv[])
 
 	for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
 	    ph = ibin/(double) archive->get_nbin();
+	    cout << ibin << endl;
+	    I[0].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
+	    L[0].push_back( sqrt( pow(integration->get_Profile(1,0)->get_amps()[ibin], 2) + pow(integration->get_Profile(2,0)->get_amps()[ibin], 2) ));
+	    V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
 
 	    // Exclude phase range
             skip_bin = false;
@@ -186,11 +190,11 @@ int main(int argc, char *argv[])
 
 	    if (integration->get_Profile(0,0)->get_amps()[ibin] > threshold * rmsI.get_value()) {
 		phase[0].push_back((ibin+.5)*(2*M_PI/(double) archive->get_nbin()));
-		I[0].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
+		//I[0].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
 		Q[0].push_back(integration->get_Profile(1,0)->get_amps()[ibin]);
 		U[0].push_back(integration->get_Profile(2,0)->get_amps()[ibin]);
-		L[0].push_back( sqrt(U[0].back()*U[0].back() + Q[0].back()*Q[0].back()));
-		V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
+		//L[0].push_back( sqrt(U[0].back()*U[0].back() + Q[0].back()*Q[0].back()));
+		//V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
 		//cout << ibin << " " <<I[0].back() << endl;
 	    }
 	}
