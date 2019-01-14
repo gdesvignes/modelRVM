@@ -229,12 +229,9 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 
 	get_globalRVM_chi2(sp);
 
-	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
-	//if (sp->Ltot < 0.0) {
-	  //sp->psi00 += M_PI /2.;
-	    //}
-	//sp->psi00 = atan( tan(sp->psi00) );
-	//theta[3] = sp->psi00 / DEG_TO_RAD;
+	// Keep Ltot as Nderived
+	phi[0] = sp->Ltot;
+
 
         lnew = -1.*sp->chi/2 - 0.5*sp->logdetN;
 	return lnew;

@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	int psi_jump_fixed=1;
 	int sampler = 0;
 	int sin_psi = 0;
-	int ascii_output =0;
+	int ascii_output =1;
 	int totnpts = 0;
 	int rank, size;
 	MPI_Init(&argc, &argv);
@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_POLYCHORD
 	  Settings settings;
           settings.nDims         = ndims;
-          settings.nDerived      = 0;
+          settings.nDerived      = 1; // Nderived is the sign of Ltot. Will be used to correct Psi0, e.g if Ltot<0, psi0+=Pi/2
           settings.nlive         = 500;
           settings.num_repeats   = settings.nDims*4;
           settings.do_clustering = false;
