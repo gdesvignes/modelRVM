@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 	  double ph=0.;
 	  bool skip_bin = false;
 
-	  // 
+	  // TODO: Specific to 1906 analysis
 	  if (mjd < 57300) nfiles_aberr++;
 
 	  if (rank==0) {

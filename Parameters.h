@@ -16,6 +16,7 @@ typedef struct param {
     int margin_phi0;  
     int have_aberr_offset;
     int sin_psi;
+  int have_offset_dipole;
 
     // Params
     double *alpha;

@@ -77,3 +77,17 @@ double get_RVM(const double &alpha, const double &beta, const double &phi0, cons
     return  PA;
 }
 
+double get_offRVM(const double &alpha, const double &beta, const double &phi0, const double &psi0, const double &x, const double &phas, const double &Minc, const double &ita, const double &eps) {
+  // phas is beta, phase de rotation du pulsar
+  // Minc is delta, angle entre l'axe de rotation et OM
+  // ita: altitude d'emission dans la magnetosphere
+  // Zita: angle d'inclinaison de la ligne de visee
+  // eps: distance par rapport au centre de l'etoile [0,1]
+  double zita = alpha + beta;
+  double k1 = sin(alpha) * (1+ita-eps*cos(Minc)*cos(zita)) * sin(phas + x-phi0) + eps*sin(Minc)* (cos(alpha)*cos(zita)*sin(x-phi0) - sin(alpha)*sin(phas)*sin(zita));
+  double k2 = (1+ita)*(cos(alpha)*sin(zita)-sin(alpha)*cos(zita)*cos(phas + x-phi0)) + eps*(sin(alpha)*cos(Minc)*cos(phas + x-phi0) - cos(alpha)*sin(Minc)*cos(x-phi0));
+
+  double PA = -atan(k1/k2) + psi0;
+  return PA;
+
+}

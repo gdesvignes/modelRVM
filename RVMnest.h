@@ -39,6 +39,13 @@ typedef struct {
   double *phi0;  /* */
   double psi0;
   double *phi_aberr_offset;
+
+  // Offset dipole
+  int have_offset_dipole;
+  double phas;
+  double Minc;
+  double ita;
+  double eps;
   
   double **phase;
   double **I;
@@ -79,6 +86,6 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 void get_globalRVM_chi2(MNStruct *par);
 void get_RVM_chi2(MNStruct *par);
 double get_RVM(const double &al, const double &be, const double &ph0, const double &ps0, const double &x);
-
+double get_offRVM(const double &alpha, const double &beta, const double &phi0, const double &psi0, const double &x, const double &phas, const double &Minc, const double &ita, const double &eps);
 
 #endif

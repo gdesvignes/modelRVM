@@ -55,6 +55,13 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	if  (par->have_aberr_offset) {par->phi_aberr_offset[0] = (Cube[ipar] * 40-20)*DEG_TO_RAD ;ipar++;}
 	else par->phi_aberr_offset[0] = 0.0;
 
+	if  (par->have_offset_dipole) {
+	  par->phas = Cube[ipar] * M_PI; ipar++;
+	  par->Minc = Cube[ipar] * M_PI; ipar++;
+	  par->ita = Cube[ipar] * 1; ipar++; // emission altitude, h = (1+ita)*R,  up to 500 R above the magnetosphere
+	  par->eps = Cube[ipar]; ipar++; // ok, between 0 and 1
+	} else {par->eps=0;}
+
         get_RVM_chi2(par);
 
 	Cube[0] = par->alpha / DEG_TO_RAD;
@@ -64,6 +71,13 @@ void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context
 	ipar=4;
 	if (par->have_efac) {Cube[ipar] = par->efac[0];ipar++;}
 	if (par->have_aberr_offset) {Cube[ipar] = par->phi_aberr_offset[0] / DEG_TO_RAD;ipar++;}
+
+	if  (par->have_offset_dipole) {
+	  Cube[ipar] = par->phas / DEG_TO_RAD; ipar++;
+	  Cube[ipar] = par->Minc / DEG_TO_RAD; ipar++;
+	  Cube[ipar] = par->ita; ipar++;
+	  Cube[ipar] = par->eps; ipar++;
+	}
 
         lnew = -par->chi/2 - 0.5*par->logdetN;;
 }

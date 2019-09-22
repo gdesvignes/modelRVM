@@ -27,6 +27,13 @@ void get_RVM_chi2(MNStruct *par) {
 	double Ltot = 0.0;
 	double Qu,Uu;
 
+	// Off centred dipole stuff
+	double phas = par->phas;
+	double Minc = par->Minc;
+	double ita = par->ita;
+	double eps = par->eps;
+
+	//eps = 0.0;
 	par->logdetN = 0.0;
 	par-> chi = 0.0;
 	double phi_off;
@@ -41,8 +48,12 @@ void get_RVM_chi2(MNStruct *par) {
 	    phi_off = par->phi_aberr_offset[0];
 	  else phi_off = 0.0;
 
+	  
+	  if (par->have_offset_dipole)
+	    PA = get_offRVM(alpha, beta, phi0 + phi_off, psi0, par->phase[0][i], phas, Minc, ita, eps);
+	  else
+	    PA = get_RVM(alpha, beta, phi0 + phi_off, psi0, par->phase[0][i]);
 
-	  PA = get_RVM(alpha, beta, phi0 + phi_off, psi0, par->phase[0][i]);
 	  //cout << alpha / DEG_TO_RAD << " " << beta  / DEG_TO_RAD<< " "<< phi0  / DEG_TO_RAD << " " << rmsQ << " " << PA << endl;
 	  Ln = (par->Q[0][i]*cos(2*PA) / Qu + par->U[0][i]*sin(2*PA) / Uu) 
 	    / (cos(2*PA)*cos(2*PA) / Qu + sin(2*PA)*sin(2*PA) / Uu);

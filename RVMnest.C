@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 							// has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 	double threshold=1.0;
-	int have_efac=0, have_aberr_offset=0;
+	int have_efac=0, have_aberr_offset=0, have_offset_dipole=0;
 	int nfiles = 1;
 	vector< vector<double> > phase, I, Q, U, L, V;
 	vector <int> nbin;
@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
 	  threshold = p.threshold;
 	  have_efac = p.have_efac;
 	  have_aberr_offset = p.have_aberr_offset;
+	  have_offset_dipole = p.have_offset_dipole;
 	}
 
 	strcpy(filename, argv[1]);
@@ -177,7 +178,7 @@ int main(int argc, char *argv[])
 
 	for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
 	    ph = ibin/(double) archive->get_nbin();
-	    cout << ibin << endl;
+	    //cout << ibin << endl;
 	    I[0].push_back(integration->get_Profile(0,0)->get_amps()[ibin]);
 	    L[0].push_back( sqrt( pow(integration->get_Profile(1,0)->get_amps()[ibin], 2) + pow(integration->get_Profile(2,0)->get_amps()[ibin], 2) ));
 	    V[0].push_back(integration->get_Profile(3,0)->get_amps()[ibin]);
@@ -209,10 +210,12 @@ int main(int argc, char *argv[])
 	par->do_plot = 0;
 	par->have_efac = have_efac;
 	par->have_aberr_offset = have_aberr_offset;
+	par->have_offset_dipole = have_offset_dipole;
 	par->epoch[0] = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
 
 	if (par->have_efac) {ndims+=1; nPar+=1; cout << "Include EFAC in modelling"<<endl;}
 	if (par->have_aberr_offset) {ndims+=1; nPar+=1;cout << "Include phase offset in modelling"<<endl;}
+	if (par->have_offset_dipole) {ndims+=4; nPar+=4; cout << "Will perform offset dipole modelling"<<endl;}
 
 	// Copy the range of parameters
         if (rv == EXIT_SUCCESS) {
@@ -235,6 +238,20 @@ int main(int argc, char *argv[])
 
 	read_statsRVM(root, nPar, par);
 
+	/*
+	par->alpha = 101.3 * M_PI/180.;
+	par->beta = -19.7 * M_PI/180.;
+	par->phi0[0] = 90.5922 * M_PI/180.;
+	par->psi0 = 10.666 * M_PI/180.;
+
+	par->alpha = 90 * M_PI/180.;
+        par->beta = 0.1 * M_PI/180.;
+
+	par->phas = 150 * M_PI/180.;
+	par->Minc =  0 * M_PI/180.;
+	par->ita = 8;
+	par->eps = 0.5;
+	*/
 	get_RVM_chi2(par);
 }
 
