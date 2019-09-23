@@ -15,8 +15,8 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	MNS->npts = (int *)malloc(nfiles * sizeof(int));
 	MNS->efac = (double *)malloc(nfiles * sizeof(double));
 	MNS->epoch = (double *)malloc(nfiles * sizeof(double));
-
 	MNS->beta = (double *)malloc(nfiles * sizeof(double));
+	MNS->phi_aberr_offset = (double *)malloc(nfiles * sizeof(double));
 	MNS->phi0 = (double *)malloc(nfiles * sizeof(double));
 	MNS->psi0 = (double *)malloc(nfiles * sizeof(double));
 

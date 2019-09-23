@@ -1,15 +1,19 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
 #include "multinest.h"
 #include "Parameters.h"
 #include "RVMnest.h"
-#include "read_MN_results.h"
+#include "read_results.h"
 
 #include <mpi.h>
 
@@ -22,8 +26,11 @@
 
 using namespace std;
 using namespace Pulsar;
-
-
+#ifdef HAVE_POLYCHORD
+#include "interfaces.hpp"
+#include "globalRVM_likelihood_PC.h"
+#endif
+MNStruct *sp;
 
 /************************************************* dumper routine ******************************************************/
 
@@ -89,7 +96,7 @@ int main(int argc, char *argv[])
 	// set the MultiNest sampling parameters
 	
 	int IS = 0;	 // IS =1 for evidence comparison				// do Nested Importance Sampling?
-	int mmodal = 1;					// do mode separation?
+	int mmodal = 0;					// do mode separation?
 	int ceff = 1;					// run in constant efficiency mode?
 	int nlive = 2000;				// number of live points
 	double efr = 0.05;				// set the required efficiency
@@ -97,16 +104,13 @@ int main(int argc, char *argv[])
 	int ndims = 4;					// dimensionality (no. of free parameters)
 	int nPar = 4;					// total no. of parameters including free & derived parameters
 	int nClsPar = 2;				// no. of parameters to do mode separation on
-	int updInt = 1000;				// after how many iterations feedback is required & the output files should be updated
+	int updInt = 5000;				// after how many iterations feedback is required & the output files should be updated
 							// note: posterior files are updated & dumper routine is called after every updInt*10 iterations
 	double Ztol = -1E90;				// all the modes with logZ < Ztol are ignored
-	int maxModes = 100;				// expected max no. of modes (used only for memory allocation)
-	int pWrap[ndims];				// which parameters to have periodic boundary conditions?
-	for(int i = 0; i < ndims; i++) pWrap[i] = 1;
-	//pWrap[0] = 1; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
+	int maxModes = 10;				// expected max no. of modes (used only for memory allocation)
 	
 	char filename[128];
-	char root[100] = "chains/globalRVMnest-";		// root for output files
+	char root[160] = "chains/globalRVMnest-";		// root for output files
 	int seed = -1;					// random no. generator seed, if < 0 then take the seed from system clock
 	int fb = 1;					// need feedback on standard output?
 	int resume = 1;					// resume from a previous job?
@@ -118,15 +122,20 @@ int main(int argc, char *argv[])
 							// has done max no. of iterations or convergence criterion (defined through tol) has been satisfied
 	void *context = 0;				// not required by MultiNest, any additional information user wants to pass
 
-	char confname[128];				// root for output files
+	char confname[160];				// root for output files
 	int inc_fixed=1;
 	int prate_fixed=1;
 	int have_efac=1;
+	int have_aberr_offset=0;
+	int nfiles_aberr = 0;
 	double threshold=1.8;
 	int margin_phi0=0;
 	int nfiles = argc - 1;
 	int psi_jump_fixed=1;
-
+	int sampler = 0;
+	int sin_psi = 0;
+	int ascii_output =1;
+	
 	int rank, size;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -139,25 +148,27 @@ int main(int argc, char *argv[])
 	int rv = readParameters(&p, "config.txt");
 
 	if (rv == EXIT_SUCCESS) {
-	    IS = p.IS;
-	    nlive = p.nlive;
-	    ceff = p.ceff;
-	    efr = p.efr;
-	    strcpy(root, p.basename);
-
-	    inc_fixed = p.inc_fixed;
-	    prate_fixed = p.prate_fixed;
-	    psi_jump_fixed = p.psi_jump_fixed;
-	    have_efac = p.have_efac;
-	    threshold = p.threshold;
-	    margin_phi0 = p.margin_phi0;
-
-
+	  sampler = p.sampler;
+	  IS = p.IS;
+	  nlive = p.nlive;
+	  ceff = p.ceff;
+	  efr = p.efr;
+	  strcpy(root, p.basename);
+	  
+	  inc_fixed = p.inc_fixed;
+	  prate_fixed = p.prate_fixed;
+	  psi_jump_fixed = p.psi_jump_fixed;
+	  have_efac = p.have_efac;
+	  have_aberr_offset = p.have_aberr_offset;
+	  threshold = p.threshold;
+	  margin_phi0 = p.margin_phi0;
+	  sin_psi = p.sin_psi;
+	  
 	    // Copy config file
-	    sprintf(confname,"%s.config", root);
-	    ifstream  src("config.txt", ios::binary);
-	    ofstream  dst(confname,   ios::binary);
-	    dst << src.rdbuf();
+	  sprintf(confname,"%s.config", root);
+	  ifstream  src("config.txt", ios::binary);
+	  ofstream  dst(confname,   ios::binary);
+	  dst << src.rdbuf();
 	} else {
 	  for (int i=0; i<nfiles; i++)  p.n_phs_exclude[i] = 0;
 	}
@@ -210,12 +221,32 @@ int main(int argc, char *argv[])
 	  double ph=0.;
 	  bool skip_bin = false;
 
+	  // 
+	  if (mjd < 57700) nfiles_aberr++;
+
 	  if (rank==0) {
 	    for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
 	      cout << "File #" << i << " : will exclude phase " << p.phs_exclude[i][nphs*2] << " to " <<  p.phs_exclude[i][1 + nphs*2] << endl;
 	  }
 
+	  // 
+	  stringstream str;
+	  ofstream myf;
+	  str << integration->get_epoch().intday();
+	  if (ascii_output) {
+	    string fnf = str.str();
+	    myf.open(fnf.c_str());
+	    myf << scientific;
+	  }
+
 	  for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
+	    if (ascii_output) {
+	      myf << ibin << " ";
+	      for (int ik=0; ik < 4; ik++)
+		myf << integration->get_Profile(ik,0)->get_amps()[ibin]<< " "; 
+	      myf << endl;
+	    }
+
             ph = ibin/(double) archive->get_nbin();
 	
 	    // Add all points to I vector
@@ -237,6 +268,8 @@ int main(int argc, char *argv[])
 
 	    }
 	  }
+	  if (ascii_output) myf.close();
+
 	  cout << "Number of data points " << Q[i].size() << endl;
 	  
 	  MJD.push_back(integration->get_epoch().in_days());
@@ -245,19 +278,22 @@ int main(int argc, char *argv[])
 	  RMS_U.push_back(rmsU.get_value());
 	}
 	
-	
 	// Init struct
 	context = init_struct(nfiles, phase , I, Q, U, L, V, RMS_I, RMS_Q, RMS_U, nbin, p.njump);
 
 	MNStruct *par = ((MNStruct *)context);
-	
+
+	par->sampler = sampler;
 	par->inc_fixed = inc_fixed;
 	par->prate_fixed = prate_fixed;
 	par->psi_jump_fixed = psi_jump_fixed;
 	par->inc = 43.7 * M_PI / 180.;
 	par->prate = 2.234;
 	par->have_efac = have_efac;
+	par->have_aberr_offset = have_aberr_offset;
 	par->margin_phi0 = margin_phi0;
+	par->sin_psi = sin_psi;
+	par->nfiles_aberr = nfiles_aberr;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
 		
 	ndims = nPar = 4;
@@ -265,38 +301,43 @@ int main(int argc, char *argv[])
 	//ndims+=nfiles; nPar+=nfiles;  // nfiles for phi0
 	if (!par->prate_fixed) {ndims+=1; nPar+=1;}
 	if (!par->inc_fixed) {ndims+=1; nPar+=1;}
-	if (par->have_efac) {ndims+=nfiles; nPar+=nfiles;}
-
-	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
-	pWrap[0] = 0; pWrap[1] = 1; pWrap[2] = 1; pWrap[3] = 1;
+	if (par->have_efac) {ndims+=2; nPar+=2;}
+	if (par->have_aberr_offset) {ndims+=nfiles_aberr; nPar+=nfiles_aberr;}
+	if (par->sin_psi) {ndims+=1; nPar+=1;}
 
 	par->njump = 0;
 	// Copy the range of parameters
 	if (rv == EXIT_SUCCESS) {
 	  par->inc = p.inc * M_PI / 180.;
 	  par->prate = p.prate;
-	    par->r_alpha = p.alpha;
-	    par->r_delta = p.delta;
-	    par->r_Phi0 = p.Phi0;
-	    par->r_phi0 = p.phi0;
-	    par->r_inc = p.r_inc;
-	    par->r_prate = p.r_prate;
-	    par->r_efac = p.efac;
-
-	    if (p.njump) {
+	  par->r_alpha = p.alpha;
+	  par->r_delta = p.delta;
+	  par->r_Phi0 = p.Phi0;
+	  par->r_phi0 = p.phi0;
+	  par->r_inc = p.r_inc;
+	  par->r_prate = p.r_prate;
+	  par->r_efac = p.efac;
+	  
+	  if (p.njump) {
 	      par->njump = p.njump;
 	      par->r_psi_jump = p.r_psi_jump;
 	      par->psi_jumps = p.psi_jumps;
 	      par->psi_jump_MJD = p.psi_jump_MJD;
 	      if (!par->psi_jump_fixed) {
-		ndims += p.njump;
-		nPar += p.njump;
+		  ndims += p.njump;
+		  nPar += p.njump;
 	      }
 	      for(int i = 0; i < par->njump; i++) par->psi_jumps[i] *= M_PI/180;
-	    }
+	  }
 	}
 	par->do_plot = 0;
 
+	int pWrap[ndims];
+	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
+	if (par->r_delta[0]==0 && par->r_delta[0]==180.) pWrap[1] = 1;
+	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==180.) pWrap[2] = 1;
+        if (!par->sin_psi) pWrap[3] = 1;
+	
 	if (rank==0) {
 	  // calling MultiNest
 	  cout << endl << " -- Parameters -- " << endl;
@@ -309,6 +350,7 @@ int main(int argc, char *argv[])
 	  cout << "Margin_phi0 = " << margin_phi0 << endl;
 	  cout << "nlive = " << nlive << endl;
 	  cout << "ndims = " << ndims << endl;
+	  cout << "sin_psi = " << sin_psi << endl;
 	  cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
 	  for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
 	  cout << "Psi_jump fixed = " << psi_jump_fixed << endl;
@@ -317,8 +359,41 @@ int main(int argc, char *argv[])
 	  cout << endl;
 	}
 
-	nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, root, seed, pWrap, fb, resume, outfile, initMPI,
-	logZero, maxiter, globalRVMLogLike, dumper, context);
+	if (sampler==0) {
+	  sprintf(filename,"%s/chainsMN-", root);
+	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, filename, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, globalRVMLogLike, dumper, context);
+	}
+	else if (sampler==1) {
+#ifdef HAVE_POLYCHORD
+	  Settings settings;
+          settings.nDims         = ndims;
+          settings.nDerived      = 1;
+          settings.nlive         = 500;
+          settings.num_repeats   = settings.nDims*5;
+          settings.do_clustering = false;
+          settings.precision_criterion = 1e-3;
+          settings.base_dir.assign(root);
+          settings.file_root     = "chainsPC";
+          settings.write_resume  = true;
+          settings.read_resume   = true;
+          settings.write_live    = true;
+          settings.write_dead    = false;
+          settings.write_stats   = true;
+          settings.equals        = true;
+          settings.posteriors    = true;
+          settings.cluster_posteriors = false;
+          settings.feedback      = 2;
+          settings.update_files  = settings.nlive;
+          settings.boost_posterior= 5.0;
+
+          //setup_loglikelihood();                                                                             
+          sp = par;
+          run_polychord(globalRVMLogLike_PC, prior, settings) ;
+#else
+	  cerr << "PolyChord library not detected during configure. Aborting! "<< endl;
+	  return(-1);
+#endif
+	}
 	
 
 	if (rank == 0) {
@@ -329,7 +404,7 @@ int main(int argc, char *argv[])
 
 	MPI_Finalize();
 
-
+	return(0);
 }
 
 /***********************************************************************************************************************/

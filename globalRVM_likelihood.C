@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <complex>
 
+
 #ifdef HAVE_MINUIT
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
@@ -13,9 +14,10 @@
 #include "Minuit2/MnPrint.h"
 #include "Minuit2/FCNBase.h"
 #include "globalRVMKJ_Fcn.h"
-#else
-#include "RVMnest.h"
 #endif
+
+#include "RVMnest.h"
+//#endif
 
 #define DEG_TO_RAD	(M_PI/180.0)
 #define RAD_TO_DEG	(180.0/M_PI)
@@ -45,7 +47,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	char label[16];	
 	double Qu,Uu;
         double chi = 0.0, Ln, PA2;
-	double Ltot = 0., logdetN = 0.;
+	double Ltot = 0.;
 	double cosPA2, sinPA2;
 	complex <double> L, arg;
 	double phi, eta, xsi;
@@ -69,6 +71,14 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    for (unsigned int j = 0; j < par->n_epoch; j++) par->phi0[j] = 5.0 * DEG_TO_RAD;
 	}
 
+	// include an offset between the PA curves of the MP and IP
+	if (par->have_aberr_offset) {
+	    for (unsigned int j = 0; j < par->n_epoch; j++) {
+		par->phi_aberr_offset[j] = (Cube[npar] * 16 - 8) * DEG_TO_RAD;
+		npar++;
+	    }
+	}
+
 	// Precession rate
 	if (!par->prate_fixed) {
 	    par->prate = Cube[npar] * (par->r_prate[1]-par->r_prate[0]) + par->r_prate[0];
@@ -77,19 +87,19 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
 	// Inclination angle
 	if (!par->inc_fixed) {
- 	    par->inc = Cube[npar] * (par->r_inc[1]*DEG_TO_RAD - par->r_inc[0]*DEG_TO_RAD) + par->r_inc[0]*DEG_TO_RAD;
-	    npar++;
+	  par->inc = (Cube[npar] * (par->r_inc[1] - par->r_inc[0]) + par->r_inc[0]) * DEG_TO_RAD;
+	  npar++;
 	}
 	
 
 	// EFACs
 	if (par->have_efac) {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) {
-	        par->efac[j] = Cube[npar] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0];
-		npar++;
-	    }
+	  for (unsigned int j = 0; j < 2; j++) {
+	    par->efac[j] = Cube[npar] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0];
+	    npar++;
+	  }
 	} else {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) par->efac[j] = 1.;
+	  for (unsigned int j = 0; j < 2; j++) par->efac[j] = 1.;
 	}
 
 	// Psi0 jumps between different datasets
@@ -102,40 +112,37 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 		npar++;
 	      }
 	    }
-	  //else
-	  //{
-	  //  for (unsigned  l=0; l<par->njump; l++) par->psi_jumps[l] = M_PI/2.;
-	  //}
-	}
-
-	double rmsQ;
-	double rmsU;
-
-	vector<double> vrmsQ, vrmsU;
-	vector< vector<double> > vQ, vU, vphase;
-	vQ.resize(par->n_epoch); vU.resize(par->n_epoch); vphase.resize(par->n_epoch);
-
-	for(unsigned int j = 0; j < par->n_epoch; j++) {
-	  vrmsQ.push_back(par->rmsQ[j]);
-	  vrmsU.push_back(par->rmsU[j]);
-	  for(unsigned int i = 0; i < par->npts[j]; i++) {
-	    vQ[j].push_back(par->Q[j][i]);
-	    vU[j].push_back(par->U[j][i]);
-	    vphase[j].push_back(par->phase[j][i]);
+	  else
+	  {
+	    for (unsigned  l=0; l<par->njump; l++) par->psi_jumps[l] = M_PI/2.;
 	  }
 	}
 
-#ifdef HAVE_MINUIT
-	// Marginalize over Phi0
 	if (par->margin_phi0) {
+	  vector<double> vrmsQ, vrmsU;
+	  vector< vector<double> > vQ, vU, vphase;
+	  vQ.resize(par->n_epoch); vU.resize(par->n_epoch); vphase.resize(par->n_epoch);
+	  for(unsigned int j = 0; j < par->n_epoch; j++) {
+	    vrmsQ.push_back(par->rmsQ[j]);
+	    vrmsU.push_back(par->rmsU[j]);
+	    for(unsigned int i = 0; i < par->npts[j]; i++) {
+	      vQ[j].push_back(par->Q[j][i]);
+	      vU[j].push_back(par->U[j][i]);
+	      vphase[j].push_back(par->phase[j][i]);
+	    }
+	  }
+
+#ifdef HAVE_MINUIT
+	  // Marginalize over Phi0
+	  if (par->margin_phi0) {
 	    //RVM_Fcn fFCN();
 	    RVM_Fcn fFCN(vphase, vQ, vU, vrmsQ, vrmsU);
 	    fFCN.set_params(par);
 
 	    MnUserParameters upar;
 	    for(unsigned int j = 0; j < par->n_epoch; j++) {
-		sprintf(label, "phi0_%d", j);
-		upar.Add(label, par->phi0[j], 5.);
+	      sprintf(label, "phi0_%d", j);
+	      upar.Add(label, par->phi0[j], 5.);
 	    }
 
 	    MnMinimize migrad(fFCN, upar);
@@ -144,19 +151,20 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    //cout<<"minimum: "<<min<<endl;
 
 	    for(unsigned int j = 0; j < par->n_epoch; j++) {
-		sprintf(label, "phi0_%d", j);
-		par->phi0[j] = min.UserState().Value(label);
-		//printf("phi0[%02d] = %lf\n",j, par->phi0[j]);
+	      sprintf(label, "phi0_%d", j);
+	      par->phi0[j] = min.UserState().Value(label);
+	      //printf("phi0[%02d] = %lf\n",j, par->phi0[j]);
 	    }
-	}
+	  }
 #endif
+	}
 
 	get_globalRVM_chi2(par);
 
 	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
-	if (par->Ltot < 0.0) {
-	    par->psi00 += M_PI /2.;
-	}
+	//if (par->Ltot < 0.0) {
+	//    par->psi00 += M_PI /2.;
+	//}
 	par->psi00 = atan( tan(par->psi00) );
 	
 	npar = 0;
@@ -174,6 +182,13 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	    }
 	}
 
+	if (par->have_aberr_offset) {
+            for (unsigned int j = 0; j < par->n_epoch; j++) {
+		Cube[npar] = par->phi_aberr_offset[j] * RAD_TO_DEG;
+                npar++;
+	    }
+	}
+
 	if (!par->prate_fixed) {
 	    Cube[npar] = par->prate;
 	    npar++;
@@ -184,19 +199,19 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 	}
 
 	if (par->have_efac) {
-	    for (unsigned int j = 0; j < par->n_epoch; j++) {
+	    for (unsigned int j = 0; j < 2; j++) {
 	        Cube[npar] = par->efac[j];
 		npar++;
 	    }
 	}
 
-        if (par->njump) {
+        if (par->njump && !par->psi_jump_fixed) {
           for (unsigned  l=0; l<par->njump; l++) {
 	    Cube[npar] = par->psi_jumps[l] * RAD_TO_DEG;
             npar++;
           }
         }
-
+	
         lnew = -1.*par->chi/2 - 0.5*par->logdetN;
 	//free(par->psi_jumps);
 }

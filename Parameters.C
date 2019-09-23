@@ -16,6 +16,7 @@ int readParameters(param *p, char *paramFile){
         fprintf (stderr, "Could not read config file %s\n", paramFile);
         return EXIT_FAILURE;
     }
+    p->sampler = g_key_file_get_integer(gkf,"sampler","sampler",NULL);
 
     p->IS = g_key_file_get_integer(gkf,"multinest","IS",NULL);
     p->nlive = g_key_file_get_integer(gkf,"multinest","nlive",NULL);
@@ -27,8 +28,11 @@ int readParameters(param *p, char *paramFile){
     p->threshold = g_key_file_get_double(gkf,"config","threshold",NULL);
     p->have_efac = g_key_file_get_integer(gkf,"config","have_efac",NULL);
     p->margin_phi0 = g_key_file_get_integer(gkf,"config","margin_phi0",NULL);
+    p->have_aberr_offset = g_key_file_get_integer(gkf,"config","have_aberr_offset",NULL);
+    p->sin_psi = g_key_file_get_integer(gkf,"config","sin_psi",NULL);
 
     p->alpha = g_key_file_get_double_list(gkf,"params","alpha", &length, NULL);
+    p->beta = g_key_file_get_double_list(gkf,"params","beta", &length, NULL);
     p->delta = g_key_file_get_double_list(gkf,"params","delta", &length, NULL);
     p->Phi0 = g_key_file_get_double_list(gkf,"params","Phi0", &length, NULL);
     p->phi0 = g_key_file_get_double_list(gkf,"params","phi0", &length, NULL);
