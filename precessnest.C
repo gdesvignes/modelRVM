@@ -28,7 +28,6 @@ using namespace std;
 using namespace Pulsar;
 #ifdef HAVE_POLYCHORD
 #include "interfaces.hpp"
-#include "globalRVM_likelihood_PC.h"
 #endif
 MNStruct *sp;
 
@@ -345,8 +344,8 @@ int main(int argc, char *argv[])
 
 	if (rank == 0) {
 	  // Read results from stats file
-	  read_stats(root, nPar, par);
-	  get_globalRVM_chi2(par);
+	  read_stats_precessRVM(root, nPar, par);
+	  get_precessRVM_chi2(par);
 	}
 
 	MPI_Finalize();

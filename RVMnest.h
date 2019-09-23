@@ -75,6 +75,7 @@ void readPA(char filename[127], std::vector<double> &  x, std::vector<double> & 
 MNStruct* init_struct(int nfiles, std::vector<std::vector<double> > x, std::vector<std::vector<double> > I, std::vector<std::vector<double> > Q, std::vector<std::vector<double> > U, std::vector<std::vector<double> > L, std::vector<std::vector<double> > V, std::vector<double> rmsI, std::vector<double> rmsQ, std::vector<double> rmsU, std::vector<int>& nbin, int njump);
 void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void precessLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void get_globalRVM_chi2(MNStruct *par);
 void get_RVM_chi2(MNStruct *par);
 double get_RVM(const double &al, const double &be, const double &ph0, const double &ps0, const double &x);
