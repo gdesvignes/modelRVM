@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 	int sampler = 0;
 	int sin_psi = 0;
 	int ascii_output =1;
-	
+	int totnpts = 0;
 	int rank, size;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	// Read Params from config files
 	param p;
 	p.numfiles = nfiles;
-	cout << "Reading parameters" << endl; 
+	if (rank==0)  cout << "Reading parameters" << endl; 
 	int rv = readParameters(&p, "config.txt");
 
 	if (rv == EXIT_SUCCESS) {
@@ -216,13 +216,13 @@ int main(int argc, char *argv[])
 	  Estimate<double> rmsU = sqrt( stats.get_baseline_variance(2) );
 	  
 	  double mjd = (double)integration->get_epoch().intday() + integration->get_epoch().fracday();
-	  
+
 	  double max_L=0.;
 	  double ph=0.;
 	  bool skip_bin = false;
 
-	  // 
-	  if (mjd < 57700) nfiles_aberr++;
+	  // TODO: Specific to 1906 analysis
+	  if (mjd < 57300) nfiles_aberr++;
 
 	  if (rank==0) {
 	    for (int nphs=0 ; nphs < p.n_phs_exclude[i]; nphs++)
@@ -270,8 +270,8 @@ int main(int argc, char *argv[])
 	  }
 	  if (ascii_output) myf.close();
 
-	  cout << "Number of data points " << Q[i].size() << endl;
-	  
+	  if (rank==0)  cout << "Number of data points " << Q[i].size() << endl;
+	  totnpts += Q[i].size();
 	  MJD.push_back(integration->get_epoch().in_days());
 	  RMS_I.push_back(rmsI.get_value());
 	  RMS_Q.push_back(rmsQ.get_value());
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 	//ndims+=nfiles; nPar+=nfiles;  // nfiles for phi0
 	if (!par->prate_fixed) {ndims+=1; nPar+=1;}
 	if (!par->inc_fixed) {ndims+=1; nPar+=1;}
-	if (par->have_efac) {ndims+=2; nPar+=2;}
+	if (par->have_efac) {ndims+=1; nPar+=1;}
 	if (par->have_aberr_offset) {ndims+=nfiles_aberr; nPar+=nfiles_aberr;}
 	if (par->sin_psi) {ndims+=1; nPar+=1;}
 
@@ -335,7 +335,7 @@ int main(int argc, char *argv[])
 	int pWrap[ndims];
 	for(int i = 0; i < ndims; i++) pWrap[i] = 0;
 	if (par->r_delta[0]==0 && par->r_delta[0]==180.) pWrap[1] = 1;
-	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==180.) pWrap[2] = 1;
+	if (par->r_Phi0[0]==0 && par->r_Phi0[0]==360.) pWrap[2] = 1;
         if (!par->sin_psi) pWrap[3] = 1;
 	
 	if (rank==0) {
@@ -352,10 +352,11 @@ int main(int argc, char *argv[])
 	  cout << "ndims = " << ndims << endl;
 	  cout << "sin_psi = " << sin_psi << endl;
 	  cout << "Will model "<< p.njump << " Psi0 jumps "<< endl;
-	  for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset at MJD "<< par->psi_jump_MJD[i] << endl;
+	  for(int i = 0; i < par->njump; i++) cout << "Introduced a Psi0 offset between MJDs "<< par->psi_jump_MJD[2*i] << " "<< par->psi_jump_MJD[2*i+1]<< endl;
 	  cout << "Psi_jump fixed = " << psi_jump_fixed << endl;
 	  cout << "Assuming reading " << nfiles << " files" << endl;
 	  cout << "Basefilename " << root << endl;
+	  cout << "Total data points " << totnpts << endl;
 	  cout << endl;
 	}
 
@@ -367,9 +368,9 @@ int main(int argc, char *argv[])
 #ifdef HAVE_POLYCHORD
 	  Settings settings;
           settings.nDims         = ndims;
-          settings.nDerived      = 1;
+          settings.nDerived      = 1; // Nderived is the sign of Ltot. Will be used to correct Psi0, e.g if Ltot<0, psi0+=Pi/2
           settings.nlive         = 500;
-          settings.num_repeats   = settings.nDims*5;
+          settings.num_repeats   = settings.nDims*4;
           settings.do_clustering = false;
           settings.precision_criterion = 1e-3;
           settings.base_dir.assign(root);
@@ -402,7 +403,7 @@ int main(int argc, char *argv[])
 	  get_globalRVM_chi2(par);
 	}
 
-	MPI_Finalize();
+	//MPI_Finalize();
 
 	return(0);
 }

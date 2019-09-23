@@ -26,7 +26,7 @@ int read_stats(char *root, int npar, MNStruct *p)
     lpar--;
   }
   else
-  sprintf(filename, "%s/chainsPC_phys_live.txt", root);
+    sprintf(filename, "%s/chainsPC_phys_live.txt", root); lpar--;
 
   ifstream stats(filename);
 
@@ -53,7 +53,7 @@ int read_stats(char *root, int npar, MNStruct *p)
 	p->delta = cols[ipar] * M_PI/180.; ipar++;
         p->phase0 = cols[ipar] * M_PI/180.; ipar++;
 	if (p->sin_psi) {
-	  p->psi00 = atan2(cols[ipar+1], cols[ipar]); ipar+=2;
+	  p->psi00 = atan(cols[ipar+1]/ cols[ipar]); ipar+=2;
 	} else {
 	  p->psi00 = cols[ipar] * M_PI/180.; ipar++;
 	}
@@ -155,6 +155,20 @@ int read_statsRVM(char *root, int npar, MNStruct *p)
         p->phi0[0] = cols[ipar] * M_PI/180.; ipar++;
 	p->psi0 = cols[ipar] * M_PI/180.; ipar++;
 
+	if (p->have_efac) {
+	  p->efac[0] = cols[ipar]; ipar++;
+	}
+
+	if (p->have_aberr_offset) {
+	  p->phi_aberr_offset[0] = cols[ipar] * M_PI/180.; ipar++;
+	}
+
+	if (p->have_offset_dipole) {
+	  p->phas = cols[ipar] * M_PI/180.; ipar++;
+	  p->Minc = cols[ipar] * M_PI/180.; ipar++;
+	  p->ita = cols[ipar]; ipar++;
+	  p->eps = cols[ipar]; ipar++;
+	}
 
       }
     }
@@ -164,6 +178,15 @@ int read_statsRVM(char *root, int npar, MNStruct *p)
        << "Beta = " << p->beta * 180./M_PI << endl
        << "Phi0 = " << p->phi0[0] * 180./M_PI << endl
        << "Psi0 = " << p->psi0 * 180./M_PI << endl;
+  if (p->have_efac)
+    cout << "EFAC = " << p->efac[0] << endl;
+  if (p->have_aberr_offset) 
+    cout << "Aberr offset (at phase 180 deg) = " << p->phi_aberr_offset[0] * 180./M_PI << endl;
+
+  if (p->have_offset_dipole) {
+    cout << "eps = " << p->eps << endl;
+  }
+  
 
   cout << "Likelihood = " << likelihood << endl;
   

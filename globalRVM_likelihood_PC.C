@@ -59,7 +59,7 @@ void prior (double cube[], double theta[], int nDims,  void *context)
     theta[ipar] = cube[ipar] * 2 - 1;
     ipar++;
   } else {
-    theta[ipar] = cube[ipar] * 180 - 90;
+    theta[ipar] = cube[ipar] * 180;
     ipar++;
   }
 
@@ -75,7 +75,7 @@ void prior (double cube[], double theta[], int nDims,  void *context)
   // include an offset between the PA curves of the MP and IP                                                               
   if (sp->have_aberr_offset) {
     for (unsigned int j = 0; j < sp->nfiles_aberr; j++) {
-      theta[ipar] = (cube[ipar] * 24 - 12);
+      theta[ipar] = (cube[ipar] *  12 - 6);
       ipar++;
     }
   }
@@ -94,7 +94,7 @@ void prior (double cube[], double theta[], int nDims,  void *context)
 
   // EFAC
   if (sp->have_efac) {
-    for (unsigned int j=0; j < sp->n_epoch; j++) {
+    for (unsigned int j=0; j < 1; j++) {
       theta[ipar] = cube[ipar] * (sp->r_efac[1] - sp->r_efac[0]) + sp->r_efac[0];
       ipar++;
     }
@@ -104,7 +104,7 @@ void prior (double cube[], double theta[], int nDims,  void *context)
   if (sp->njump) {
     if(!sp->psi_jump_fixed) {
       for (unsigned  l=0; l<sp->njump; l++) {
-	theta[ipar] = cube[ipar] * 90. + 45.;
+	theta[ipar] = cube[ipar] *  (sp->r_psi_jump[1] - sp->r_psi_jump[0]) + sp->r_psi_jump[0];
 	ipar++;
       }
     }
@@ -128,7 +128,7 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	sp->delta = theta[ipar] * DEG_TO_RAD; ipar++;
 	sp->phase0 = theta[ipar] * DEG_TO_RAD; ipar++;
 	if (sp->sin_psi) {
-	  sp->psi00 = atan2(theta[ipar+1], theta[ipar]);
+	  sp->psi00 = atan(theta[ipar+1]/theta[ipar]);
 	  ipar += 2;
 	} else {
 	  sp->psi00 = theta[ipar] * DEG_TO_RAD; ipar++;
@@ -166,12 +166,12 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	
 	// EFACs
 	if (sp->have_efac) {
-	    for (unsigned int j = 0; j < sp->n_epoch; j++) {
+	    for (unsigned int j = 0; j <3; j++) {
 	        sp->efac[j] = theta[ipar];
 		ipar++;
 	    }
 	} else {
-	    for (unsigned int j = 0; j < sp->n_epoch; j++) sp->efac[j] = 1.;
+	    for (unsigned int j = 0; j < 3; j++) sp->efac[j] = 1.;
 	}
 
 	// Psi0 jumps between different datasets
@@ -229,12 +229,9 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 
 	get_globalRVM_chi2(sp);
 
-	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
-	//if (sp->Ltot < 0.0) {
-	  //sp->psi00 += M_PI /2.;
-	    //}
-	//sp->psi00 = atan( tan(sp->psi00) );
-	//theta[3] = sp->psi00 / DEG_TO_RAD;
+	// Keep Ltot as Nderived
+	phi[0] = sp->Ltot;
+
 
         lnew = -1.*sp->chi/2 - 0.5*sp->logdetN;
 	return lnew;
