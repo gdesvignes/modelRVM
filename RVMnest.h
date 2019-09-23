@@ -13,19 +13,6 @@
 typedef struct {
     
     int n_epoch;    /* Number of epochs */
-    
-    double *epoch;
-    int *npts;
-    int *nbin;
-    
-    int prate_fixed;
-    int inc_fixed;
-    int have_efac;
-    int margin_phi0;
-    int psi_jump_fixed;
-    int do_plot;
-
-    int n_epoch;    /* Number of epochs */
     int ndims;
     double *epoch;
     int *npts;
