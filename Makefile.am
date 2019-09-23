@@ -7,7 +7,7 @@ libRVMnest_la_LIBADD = @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@
 
 if HAVE_MULTINEST
 lib_LTLIBRARIES += libRVMnest.la
-bin_PROGRAMS += globalRVMnest RVMnest
+bin_PROGRAMS += globalRVMnest RVMnest precessnest
 
 libRVMnest_la_SOURCES = simpleParameters.C Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C get_globalRVM_chi2.C read_results.C precess_likelihood.C get_precessRVM_chi2.C
 libRVMnest_la_LIBADD += @FFTW_LIBS@ @MINUIT_LIBS@ @MULTINEST_LIBS@
