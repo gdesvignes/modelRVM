@@ -19,9 +19,9 @@ void get_RVM_chi2(MNStruct *par) {
 	complex <double> L, arg;
 
 	double alpha = par->alpha;
-	double beta = par->beta;
+	double beta = par->beta[0];
 	double phi0 = par->phi0[0];
-	double psi0 = par->psi0;
+	double psi0 = par->psi0[0];
 	double rmsQ = par->rmsQ[0];
 	double rmsU = par->rmsU[0];
 	double Ltot = 0.0;
