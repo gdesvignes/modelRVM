@@ -72,7 +72,7 @@ void get_RVM_chi2(MNStruct *par) {
         if (Ltot < 0.0) {
             psi0 += M_PI /2.;
         }
-        par->psi0 = atan( tan(psi0) );
+        par->psi0[0] = atan( tan(psi0) );
 
 
 	if (par->do_plot) {

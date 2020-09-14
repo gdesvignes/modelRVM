@@ -31,6 +31,7 @@ MNStruct* init_struct(int nfiles, vector< vector<double> > phase, vector< vector
 	MNS->V = (double **)malloc(nfiles * sizeof(double *));
 	MNS->rmsI = (double *)malloc(nfiles * sizeof(double));
 	MNS->nbin = (int *)malloc(nfiles * sizeof(int));
+	MNS->Ltot = (double *)malloc(nfiles * sizeof(double));
 
 	MNS->psi_jumps = (double *) malloc(njump * sizeof(double));
 	

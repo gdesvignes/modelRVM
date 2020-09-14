@@ -230,7 +230,7 @@ double globalRVMLogLike_PC(double theta[], int nDims, double phi[], int nDerived
 	get_globalRVM_chi2(sp);
 
 	// Keep Ltot as Nderived
-	phi[0] = sp->Ltot;
+	phi[0] = sp->Ltot[0];
 
 
         lnew = -1.*sp->chi/2 - 0.5*sp->logdetN;

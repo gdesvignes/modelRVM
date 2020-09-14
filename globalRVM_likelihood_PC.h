@@ -1,4 +1,4 @@
-
+#pragma once
 #include "RVMnest.h"
 
 extern MNStruct *sp;

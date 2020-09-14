@@ -39,7 +39,22 @@ typedef struct {
     double *phi0;  /* */
     double *psi0;
     double *phi_aberr_offset;
-    
+  
+    // Offset dipole
+    int have_offset_dipole;
+    double phas;
+    double Minc;
+    double ita;
+    double eps;
+
+    // Free precession model
+    double pperiod;
+    double pphase;
+    double pfact;
+    double betaamp;
+    double beta0;
+    double mjd0;
+
     double **phase;
     double **I;
     double **Q;
@@ -67,7 +82,7 @@ typedef struct {
     double *psi_jump_MJD;
     
     double chi;
-    double Ltot;
+    double *Ltot;
     double logdetN;
 } MNStruct;
 
@@ -76,6 +91,8 @@ MNStruct* init_struct(int nfiles, std::vector<std::vector<double> > x, std::vect
 void RVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
 void precessLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *context);
+void get_precessRVM_chi2(MNStruct *par);
+void get_precessmRVM_chi2(MNStruct *par);
 void get_globalRVM_chi2(MNStruct *par);
 void get_RVM_chi2(MNStruct *par);
 double get_RVM(const double &al, const double &be, const double &ph0, const double &ps0, const double &x);

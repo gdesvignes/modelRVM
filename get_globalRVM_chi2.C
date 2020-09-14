@@ -52,13 +52,14 @@ void get_globalRVM_chi2(MNStruct *par) {
 	stringstream s;
 	ofstream myf;
 	par->chi = 0.0;
-	par->Ltot = 0.0;
 	par->logdetN = 0.0;
 
 	par->omega = par->prate / 365.25 * DEG_TO_RAD;
 
 	for (unsigned int j = 0; j < par->n_epoch; j++) {
-	  totnbpts += par->npts[j];
+	    par->Ltot[j] = 0.0;
+
+	    totnbpts += par->npts[j];
 	    dt = par->epoch[j] - par->epoch[0];
 
 	    // -- compute beta and psi first --
@@ -131,7 +132,7 @@ void get_globalRVM_chi2(MNStruct *par) {
 			+ (par->U[j][i]-imag(L))*(par->U[j][i]-imag(L))/(Uu);
 
 		par->logdetN += log(Uu) + log(Qu);
-		par->Ltot += Ln;
+		par->Ltot[j] += Ln;
 	      }
 
 	    if (par->do_plot)
@@ -174,9 +175,9 @@ void get_globalRVM_chi2(MNStruct *par) {
 	    if (par->epoch[j] < 57300) ix++;
 	}
 
-	if (par->Ltot < 0.0) {
-	  par->psi00 += M_PI /2.;
-	}
+	//if (par->Ltot < 0.0) {
+	//  par->psi00 += M_PI /2.;
+	//}
 
 	// Print summary
 	if (par->do_plot)

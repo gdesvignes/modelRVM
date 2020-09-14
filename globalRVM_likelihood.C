@@ -161,10 +161,7 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
 
 	get_globalRVM_chi2(par);
 
-	// shift the reference P.A. by 90 degrees and ensure that PA0 lies on -pi/2 -> pi/2
-	//if (par->Ltot < 0.0) {
-	//    par->psi00 += M_PI /2.;
-	//}
+	// Make sure that PA0 lies on -pi/2 -> pi/2
 	par->psi00 = atan( tan(par->psi00) );
 	
 	npar = 0;
@@ -211,7 +208,6 @@ void globalRVMLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *c
             npar++;
           }
         }
-	
+
         lnew = -1.*par->chi/2 - 0.5*par->logdetN;
-	//free(par->psi_jumps);
 }
