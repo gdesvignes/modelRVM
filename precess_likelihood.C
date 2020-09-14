@@ -58,17 +58,16 @@ void precessLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
 	    
 	}
 
-#if 0
 	// EFACs
 	if (par->have_efac) {
-	  for (unsigned int j = 0; j < 2; j++) {
+	  for (unsigned int j = 0; j < 1; j++) {
 	    par->efac[j] = Cube[npar] * (par->r_efac[1]-par->r_efac[0]) + par->r_efac[0];
 	    npar++;
 	  }
 	} else {
-	  for (unsigned int j = 0; j < 2; j++) par->efac[j] = 1.;
+	  for (unsigned int j = 0; j < 1; j++) par->efac[j] = 1.;
 	}
-#endif
+
 	// Compute chi**2
 	get_precessRVM_chi2(par);
 
@@ -82,12 +81,12 @@ void precessLogLike(double *Cube, int &ndim, int &npars, double &lnew, void *con
         }
 
 	if (par->have_efac) {
-	    for (unsigned int j = 0; j < 2; j++) {
+	    for (unsigned int j = 0; j < 1; j++) {
 	        Cube[npar] = par->efac[j];
 		npar++;
 	    }
 	}
 
-        //lnew = -1.*par->chi/2 - 0.5*par->logdetN;
-	lnew = -1.*par->chi/2.;
+        lnew = -1.*par->chi/2 - 0.5*par->logdetN;
+	//lnew = -1.*par->chi/2.;
 }

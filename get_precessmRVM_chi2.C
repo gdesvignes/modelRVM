@@ -13,13 +13,28 @@
 
 using namespace std;
 
-void get_precessRVM_chi2(MNStruct *par) {
+void get_precessmRVM_chi2(MNStruct *par) {
 
     double Ln, PA;
     complex <double> L, arg;
     int totnbpts=0;
+    double alpha = par->alpha;
     double prev_chi = 0.0;
     double rms2Q, rms2U;
+    double beta;
+
+    int debug = 0;
+    if (debug) {
+	//alpha = 100 * DEG_TO_RAD;
+	//par->beta[0] = 3 * DEG_TO_RAD;
+	//par->phi0[0] = 180 * DEG_TO_RAD;
+	//par->psi0[0] = 45 * DEG_TO_RAD;
+	//par->beta[1] = -5 * DEG_TO_RAD;
+        //par->phi0[1] = 180 * DEG_TO_RAD;
+        //par->psi0[1] = 45 * DEG_TO_RAD;
+	par->do_plot=1;
+    }
+
     par->chi = 0.0;
     par->logdetN = 0.0; 
     //cout << alpha / DEG_TO_RAD << " " << par->beta[0]  / DEG_TO_RAD<< " "<< par->phi0[0]  / DEG_TO_RAD << " " << par->psi0[0] << endl;
@@ -35,11 +50,12 @@ void get_precessRVM_chi2(MNStruct *par) {
 	
 	totnbpts += par->npts[j];
 	par->Ltot[j] = 0;
+
+	// Get beta from the model
+	beta = par->beta0 + par->betaamp * sin(2*M_PI* par->pperiod / exp(par->epoch[j] - par->mjd0)  * (par->epoch[j] - par->mjd0) + par->pphase);
+
 	for(unsigned int i = 0; i < par->npts[j]; i++) {
-	    if (par->pmodel==0) // pmodel=0 forced precession, pmodel=1 free precession 
-		PA = get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
-	    else // in this case, par->alpha is really zeta
-		PA = get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+	    PA = get_RVM(alpha, beta, par->phi0[j], par->psi0[j], par->phase[j][i]);
 
 	    Ln = (par->Q[j][i]*cos(2*PA) / rms2Q + par->U[j][i]*sin(2*PA) / rms2U) 
 		/ (cos(2*PA)*cos(2*PA) / rms2Q + sin(2*PA)*sin(2*PA) / rms2U);
@@ -73,10 +89,7 @@ void get_precessRVM_chi2(MNStruct *par) {
 
 	  double Lv, Lve;
 	  for (unsigned int i = 0; i < par->nbin[j]; i++) {
-	    if (par->pmodel==0) // pmodel=0 forced precession, pmodel=1 free precession 
-		PA = get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
-	    else // in this case, par->alpha is really zeta
-		PA = get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+	      PA = get_RVM(alpha, beta, par->phi0[j], par->psi0[j], (i+.5)*360./par->nbin[j] * DEG_TO_RAD);
 	      myf << (i+.5)*360./par->nbin[j] << " "<< par->I[j][i] << " "<< par->L[j][i] << " "<< par->V[j][i]<< " " <<  PA * 180./M_PI << endl;
 	  }
 	  myf.close();
@@ -97,10 +110,11 @@ void get_precessRVM_chi2(MNStruct *par) {
 	  myf.close();
 
 
-	  
+	  cout << "Beta : " << beta / DEG_TO_RAD  << endl;
 	  cout << "Chi2 : " << par->chi-prev_chi<< endl;
 	  cout << "Nbpts: " << par->npts[j] << endl;
 	  prev_chi = par->chi;
 	}
     }
+    if (debug) exit(0);
 }

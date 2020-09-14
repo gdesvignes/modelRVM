@@ -30,6 +30,7 @@ int readParameters(param *p, char *paramFile){
     p->margin_phi0 = g_key_file_get_integer(gkf,"config","margin_phi0",NULL);
     p->have_aberr_offset = g_key_file_get_integer(gkf,"config","have_aberr_offset",NULL);
     p->sin_psi = g_key_file_get_integer(gkf,"config","sin_psi",NULL);
+    p->pmodel = g_key_file_get_integer(gkf,"config","pmodel",NULL);
 
     p->alpha = g_key_file_get_double_list(gkf,"params","alpha", &length, NULL);
     p->beta = g_key_file_get_double_list(gkf,"params","beta", &length, NULL);

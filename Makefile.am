@@ -5,16 +5,18 @@ lib_LTLIBRARIES=
 libRVMnest_la_SOURCES = get_globalRVM_chi2.C get_RVM_chi2.C
 libRVMnest_la_LIBADD = @CFITSIO_LIBS@ @PSRCHIVE_LIBS@ @GLIB_LIBS@
 
+AM_CXXFLAGS = -std=gnu++11
+
 if HAVE_MULTINEST
 lib_LTLIBRARIES += libRVMnest.la
-bin_PROGRAMS += globalRVMnest RVMnest precessnest
+bin_PROGRAMS += globalRVMnest RVMnest precessnest precessnestmodel
 
-libRVMnest_la_SOURCES = simpleParameters.C Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C get_globalRVM_chi2.C read_results.C precess_likelihood.C get_precessRVM_chi2.C
+libRVMnest_la_SOURCES += simpleParameters.C Parameters.C RVMnest_utils.C globalRVM_likelihood.C RVM_likelihood.C read_results.C precess_likelihood.C get_precessRVM_chi2.C  get_precessmRVM_chi2.C
 libRVMnest_la_LIBADD += @FFTW_LIBS@ @MINUIT_LIBS@ @MULTINEST_LIBS@
 endif
 
 if HAVE_POLYCHORD
-libRVMnest_la_SOURCES += globalRVM_likelihood_PC.C polychord_c_interface.C
+libRVMnest_la_SOURCES += globalRVM_likelihood_PC.C precess_likelihood_PC.C precessmodel_likelihood_PC.C polychord_c_interface.C
 libRVMnest_la_LIBADD += @POLYCHORD_LIBS@
 endif
 
@@ -40,7 +42,10 @@ RVMnest_SOURCES = RVMnest.C
 RVMnest_LDADD = libRVMnest.la
 
 precessnest_SOURCES = precessnest.C
-globalRVMnest_LDADD = libRVMnest.la
+precessnest_LDADD = libRVMnest.la
+
+precessnestmodel_SOURCES = precessnestmodel.C
+precessnestmodel_LDADD = libRVMnest.la
 
 if HAVE_POLYCHORD
 globalRVMnest_LDADD +=  @POLYCHORD_LIBS@

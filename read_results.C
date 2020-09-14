@@ -22,12 +22,13 @@ int read_stats(char *root, int npar, MNStruct *p)
   cout << "Reading results " << endl;
 
   if (p->sampler == 0) {
-    sprintf(filename, "%s/chainsMN-phys_live.points", root);
-    lpar--;
+      sprintf(filename, "%s/chainsMN-phys_live.points", root);
+      lpar--;
   }
   else
-    sprintf(filename, "%s/chainsPC_phys_live.txt", root); lpar--;
-
+      sprintf(filename, "%s/chainsPC_phys_live.txt", root);
+  lpar--;
+  
   ifstream stats(filename);
 
   // Ask to output the result
@@ -121,7 +122,7 @@ int read_stats_precessRVM(char *root, int npar, MNStruct *p)
     int ipar=0,lpar=npar+1;
     string line;
     char filename[256];
-    double likelihood=numeric_limits<double>::min();
+    double likelihood=numeric_limits<double>::lowest();
     double val, val_err;
 
     cout << "Reading results " << endl;
@@ -131,10 +132,11 @@ int read_stats_precessRVM(char *root, int npar, MNStruct *p)
 	lpar--;
     }
     else
-	sprintf(filename, "%s/chainsPC_phys_live.txt", root); lpar--;
+	{sprintf(filename, "%s/chainsPC_phys_live.txt", root); lpar++;} lpar--;
 
+    cout << "Column for likelihood" << lpar <<endl; 
     ifstream stats(filename);
-
+    
     // Ask to output the result
     p->do_plot = 1;
 
@@ -160,11 +162,16 @@ int read_stats_precessRVM(char *root, int npar, MNStruct *p)
 		    p->phi0[j] = cols[ipar] * M_PI/180.; ipar++;
 		    p->psi0[j] = cols[ipar] * M_PI/180.; ipar++;
 		}
+
+		if (p->have_efac) {
+		    p->efac[0] = cols[ipar]; ipar++;
+		}
+		    
 	    }
 	}
   
     cout << "Finished reading stats file "<< filename << endl;
-    cout << "Alpha = " << p->alpha * 180./M_PI << endl
+    cout << "Alpha = " << p->alpha * 180./M_PI << endl;
 	for (unsigned int j = 0; j < p->n_epoch; j++) {
 	    cout << "File #" << j << endl;
 	    cout << "beta  = " << p->beta[j] * 180./M_PI << endl;
@@ -173,6 +180,66 @@ int read_stats_precessRVM(char *root, int npar, MNStruct *p)
 	}    
     cout << "Likelihood = " << likelihood << endl;
   
+    return(0);
+}
+
+int read_stats_precessmRVM(char *root, int npar, MNStruct *p)
+{
+
+    int ipar=0,lpar=npar;
+    string line;
+    char filename[256];
+    double likelihood=numeric_limits<double>::lowest();
+    double val, val_err;
+
+    cout << "Reading results " << endl;
+
+    if (p->sampler == 0) {
+        sprintf(filename, "%s/chainsMN-phys_live.points", root);
+        lpar--;
+    }  else {
+	sprintf(filename, "%s/chainsPC_phys_live.txt", root);
+	lpar = npar + p->n_epoch;;
+    }
+
+    cout << "Column for likelihood: " << lpar <<endl;
+    ifstream stats(filename);
+
+    // Ask to output the result                                                                                                     
+    p->do_plot = 1;
+
+    if (!stats.is_open())
+        {
+            cerr << "Error opening file "<<filename << endl;
+            return(-1);
+        }
+    while (getline(stats, line))
+        {
+            istringstream iss(line);
+            vector<double> cols{istream_iterator<double>{iss},
+                    istream_iterator<double>{}};
+
+            ipar = 0;
+            if (cols[lpar] > likelihood) {
+                likelihood = cols[lpar];
+
+                p->alpha = cols[ipar] * M_PI/180.; ipar++;
+		p->beta[0] = cols[ipar] * M_PI/180.; ipar++;
+		p->pperiod = cols[ipar]; ipar++;
+		p->pphase = cols[ipar]; ipar++;
+		p->pfact = cols[ipar]; ipar++;
+                for (unsigned int j = 0; j < p->n_epoch; j++) {
+                    p->phi0[j] = cols[ipar] * M_PI/180.; ipar++;
+                    p->psi0[j] = cols[ipar] * M_PI/180.; ipar++;
+                }
+            }
+	}
+
+    cout << "Finished reading stats file "<< filename << endl;
+    cout << "Alpha = " << p->alpha * 180./M_PI << endl;
+    cout << "Precession period = " << p->pperiod << endl;
+    cout << "Likelihood = " << likelihood << endl;
+
     return(0);
 }
 
@@ -212,9 +279,9 @@ int read_statsRVM(char *root, int npar, MNStruct *p)
 	likelihood = cols[lpar];
 
 	p->alpha = cols[ipar] * M_PI/180.; ipar++;
-	p->beta = cols[ipar] * M_PI/180.; ipar++;
+	p->beta[0] = cols[ipar] * M_PI/180.; ipar++;
         p->phi0[0] = cols[ipar] * M_PI/180.; ipar++;
-	p->psi0 = cols[ipar] * M_PI/180.; ipar++;
+	p->psi0[0] = cols[ipar] * M_PI/180.; ipar++;
 
 	if (p->have_efac) {
 	  p->efac[0] = cols[ipar]; ipar++;
@@ -236,9 +303,9 @@ int read_statsRVM(char *root, int npar, MNStruct *p)
   
   cout << "Finished reading stats file "<< filename << endl;
   cout << "Alpha = " << p->alpha * 180./M_PI << endl
-       << "Beta = " << p->beta * 180./M_PI << endl
+       << "Beta = " << p->beta[0] * 180./M_PI << endl
        << "Phi0 = " << p->phi0[0] * 180./M_PI << endl
-       << "Psi0 = " << p->psi0 * 180./M_PI << endl;
+       << "Psi0 = " << p->psi0[0] * 180./M_PI << endl;
   if (p->have_efac)
     cout << "EFAC = " << p->efac[0] << endl;
   if (p->have_aberr_offset) 

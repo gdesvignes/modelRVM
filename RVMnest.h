@@ -48,6 +48,7 @@ typedef struct {
     double eps;
 
     // Free precession model
+    int pmodel;
     double pperiod;
     double pphase;
     double pfact;

@@ -28,7 +28,7 @@ using namespace std;
 using namespace Pulsar;
 #ifdef HAVE_POLYCHORD
 #include "interfaces.hpp"
-#include "precess_likelihood_PC.h"
+#include "precessm_likelihood_PC.h"
 #endif
 MNStruct *sp;
 
@@ -126,7 +126,6 @@ int main(int argc, char *argv[])
 	int inc_fixed=1;
 	int prate_fixed=1;
 	int have_efac=0;
-	int pmodel=0;
 	int have_aberr_offset=0;
 	int nfiles_aberr = 0;
 	double threshold=1.8;
@@ -135,7 +134,7 @@ int main(int argc, char *argv[])
 	int psi_jump_fixed=1;
 	int sampler = 0;
 	int sin_psi = 0;
-	int ascii_output = 1;
+	int ascii_output = 0;
 	
 	int rank, size;
 	MPI_Init(&argc, &argv);
@@ -158,7 +157,6 @@ int main(int argc, char *argv[])
 	  
 	  threshold = p.threshold;
 	  have_efac = p.have_efac;
-	  pmodel = p.pmodel;
 
 	    // Copy config file
 	  sprintf(confname,"%s.config", root);
@@ -227,27 +225,16 @@ int main(int argc, char *argv[])
 	  ofstream myf;
 	  str << integration->get_epoch().printdays(8);
 	  if (ascii_output) {
-	      //string fnf = str.str();
-	      string fnf = "Profile_" + to_string(i) + "-raw.log";
-	      myf.open(fnf.c_str());
-	      myf << scientific;
+	    string fnf = str.str();
+	    myf.open(fnf.c_str());
+	    myf << scientific;
 	  }
 
 	  for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
 	    if (ascii_output) {
-		myf << (float) ibin / archive->get_nbin() * 360. << " ";
+	      myf << ibin << " ";
 	      for (int ik=0; ik < 4; ik++)
 		myf << integration->get_Profile(ik,0)->get_amps()[ibin]<< " "; 
-
-	      
-	      double PA = 0.5 * atan2(integration->get_Profile(2,0)->get_amps()[ibin], integration->get_Profile(1,0)->get_amps()[ibin]) * 180./ M_PI;
-	      double Lv = sqrt(pow(integration->get_Profile(1,0)->get_amps()[ibin],2) + pow(integration->get_Profile(1,0)->get_amps()[ibin],2));
-	      double Lve = 28.65 * rmsI.get_value()/Lv;
-	      if (Lv > threshold * rmsI.get_value()) {
-		  myf << PA << " " << Lve;
-	      }
-	      else myf << "0.0" << " " << "0.0";
-
 	      myf << endl;
 	    }
 
@@ -289,11 +276,12 @@ int main(int argc, char *argv[])
 
 	par->sampler = sampler;
 	par->have_efac = have_efac;
-	par->pmodel = pmodel;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
 		
 	ndims = nPar = 1;
-	ndims+=nfiles*3; nPar+=nfiles*3;  // nfiles for phi0
+	ndims+=nfiles*2; nPar+=nfiles*2;  // only 2 params per epoch, i.e. phi0 and psi0 from the RVM
+	ndims+=5; nPar+=5;
+
 	if (par->have_efac) {ndims+=1; nPar+=1;}  
 
 	// Copy the range of parameters
@@ -312,6 +300,7 @@ int main(int argc, char *argv[])
 	pWrap[0] = 1;
 
 	if (rank==0) {
+	  // calling MultiNest
 	  cout << endl << " -- Parameters -- " << endl;
 	  cout << "Have EFAC   = " << have_efac << endl;
 	  cout << "Threshold   = " << threshold << endl;
@@ -319,23 +308,21 @@ int main(int argc, char *argv[])
 	  cout << "ndims = " << ndims << endl;
 	  cout << "Assuming reading " << nfiles << " files" << endl;
 	  cout << "Basefilename " << root << endl;
-	  if (!par->pmodel)
-	      cout << "Forced precession model" << endl;
-	  else
-	      cout << "Free precession model" << endl;
 	  cout << endl;
 	}
 
 	if (sampler==0) {
-	  sprintf(filename,"%s/chainsMN-", root);
-	  nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, filename, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, precessLogLike, dumper, context);
+	    printf("Not implemented yet\n");
+	    exit(-1);
+	    //sprintf(filename,"%s/chainsMN-", root);
+	    //nested::run(IS, mmodal, ceff, p.nlive, tol, efr, ndims, nPar, nClsPar, maxModes, updInt, Ztol, filename, seed, pWrap, fb, resume, outfile, initMPI, logZero, maxiter, precessmLogLike, dumper, context);
 	}
 	else if (sampler==1) {
 #ifdef HAVE_POLYCHORD 
 	  Settings settings;
           settings.nDims         = ndims;
           settings.nDerived      = nfiles;
-          settings.nlive         = 1000;
+          settings.nlive         = 500;
           settings.num_repeats   = settings.nDims*5;
           settings.do_clustering = false;
           settings.precision_criterion = 1e-3;
@@ -355,7 +342,7 @@ int main(int argc, char *argv[])
 
           //setup_loglikelihood();                                                                             
           sp = par;
-          run_polychord(precessLogLike_PC, precessprior, settings) ;
+          run_polychord(precessmLogLike_PC, precessmprior, settings) ;
 #else
 	  cerr << "PolyChord library not detected during configure. Aborting! "<< endl;
 	  return(-1);
@@ -365,8 +352,8 @@ int main(int argc, char *argv[])
 
 	if (rank == 0) {
 	  // Read results from stats file
-	  read_stats_precessRVM(root, nPar, par);
-	  get_precessRVM_chi2(par);
+	  read_stats_precessmRVM(root, nPar, par);
+	  get_precessmRVM_chi2(par);
 	}
 
 	MPI_Finalize();
