@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	// Read Params from config files
 	param p;
 	p.numfiles = nfiles;
-	cout << "Reading parameters" << endl; 
+	if (rank==0) cout << "Reading parameters" << endl;
 	int rv = readParameters(&p, "config.txt");
 
 	if (rv == EXIT_SUCCESS) {
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 	  stringstream str;
 	  ofstream myf;
 	  str << integration->get_epoch().printdays(8);
-	  if (ascii_output) {
+	  if (rank==0 && ascii_output) {
 	      //string fnf = str.str();
 	      string fnf = "Profile_" + to_string(i) + "-raw.log";
 	      myf.open(fnf.c_str());
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 	  }
 
 	  for (int ibin=0; ibin<archive->get_nbin(); ibin++) {
-	    if (ascii_output) {
+	    if (rank==0 && ascii_output) {
 		myf << (float) ibin / archive->get_nbin() * 360. << " ";
 	      for (int ik=0; ik < 4; ik++)
 		myf << integration->get_Profile(ik,0)->get_amps()[ibin]<< " "; 
@@ -272,9 +272,9 @@ int main(int argc, char *argv[])
 
 	    }
 	  }
-	  if (ascii_output) myf.close();
+	  if (rank==0 && ascii_output) myf.close();
 
-	  cout << "Number of data points " << Q[i].size() << endl;
+	  if (rank==0) cout << "Number of data points " << Q[i].size() << endl;
 	  
 	  MJD.push_back(integration->get_epoch().in_days());
 	  RMS_I.push_back(rmsI.get_value());

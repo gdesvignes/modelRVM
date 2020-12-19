@@ -15,7 +15,7 @@ using namespace std;
 
 void get_precessRVM_chi2(MNStruct *par) {
 
-    double Ln, PA;
+  double Ln, PA,PA2;
     complex <double> L, arg;
     int totnbpts=0;
     double prev_chi = 0.0;
@@ -37,14 +37,14 @@ void get_precessRVM_chi2(MNStruct *par) {
 	par->Ltot[j] = 0;
 	for(unsigned int i = 0; i < par->npts[j]; i++) {
 	    if (par->pmodel==0) // pmodel=0 forced precession, pmodel=1 free precession 
-		PA = get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+		PA2 = 2*get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
 	    else // in this case, par->alpha is really zeta
-		PA = get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+		PA2 = 2*get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
 
-	    Ln = (par->Q[j][i]*cos(2*PA) / rms2Q + par->U[j][i]*sin(2*PA) / rms2U) 
-		/ (cos(2*PA)*cos(2*PA) / rms2Q + sin(2*PA)*sin(2*PA) / rms2U);
+	    Ln = (par->Q[j][i]*cos(PA2) / rms2Q + par->U[j][i]*sin(PA2) / rms2U) 
+		/ (cos(PA2)*cos(PA2) / rms2Q + sin(PA2)*sin(PA2) / rms2U);
 	    
-	    arg = complex<double>(0., 2 * PA);
+	    arg = complex<double>(0., PA2);
 	    L =  Ln * exp (arg);
 	    par->chi += (par->Q[j][i]-real(L))*(par->Q[j][i]-real(L)) / rms2Q
 		+ (par->U[j][i]-imag(L))*(par->U[j][i]-imag(L)) / rms2U;
@@ -74,10 +74,10 @@ void get_precessRVM_chi2(MNStruct *par) {
 	  double Lv, Lve;
 	  for (unsigned int i = 0; i < par->nbin[j]; i++) {
 	    if (par->pmodel==0) // pmodel=0 forced precession, pmodel=1 free precession 
-		PA = get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+	      PA = get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], (i+.5)*360./par->nbin[j] * M_PI/180.);
 	    else // in this case, par->alpha is really zeta
-		PA = get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
-	      myf << (i+.5)*360./par->nbin[j] << " "<< par->I[j][i] << " "<< par->L[j][i] << " "<< par->V[j][i]<< " " <<  PA * 180./M_PI << endl;
+	      PA = get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], (i+.5)*360/par->nbin[j] * M_PI/180.);
+	    myf << (i+.5)*360./par->nbin[j] << " "<< par->I[j][i] << " "<< par->L[j][i] << " "<< par->V[j][i]<< " " <<  PA * 180./M_PI << endl;
 	  }
 	  myf.close();
 
