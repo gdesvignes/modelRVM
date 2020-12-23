@@ -98,8 +98,8 @@ void get_precessRVM_chi2(MNStruct *par) {
 
 
 	  
-	  cout << "Chi2 : " << par->chi-prev_chi<< endl;
-	  cout << "Nbpts: " << par->npts[j] << endl;
+	  //cout << "Chi2 : " << par->chi-prev_chi<< endl;
+	  //cout << "Nbpts: " << par->npts[j] << endl;
 	  prev_chi = par->chi;
 	}
     }

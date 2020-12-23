@@ -30,6 +30,20 @@ using namespace Pulsar;
 #include "interfaces.hpp"
 #include "precess_likelihood_PC.h"
 #endif
+
+#ifdef HAVE_MINUIT
+#include "Minuit2/FunctionMinimum.h"
+#include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnMinos.h"
+#include "Minuit2/MnMinimize.h"
+#include "Minuit2/MnUserParameters.h"
+#include "Minuit2/MnPrint.h"
+#include "Minuit2/FCNBase.h"
+#include "precess_margin.h"
+#endif
+
+#define DEG_TO_RAD	(M_PI/180.0)
+
 MNStruct *sp;
 
 /************************************************* dumper routine ******************************************************/
@@ -130,12 +144,12 @@ int main(int argc, char *argv[])
 	int have_aberr_offset=0;
 	int nfiles_aberr = 0;
 	double threshold=1.8;
-	int margin_phi0=0;
 	int nfiles = argc - 1;
 	int psi_jump_fixed=1;
 	int sampler = 0;
 	int sin_psi = 0;
 	int ascii_output = 1;
+	int margin_phi0 = 0, margin_psi0 = 0;
 	
 	int rank, size;
 	MPI_Init(&argc, &argv);
@@ -160,6 +174,13 @@ int main(int argc, char *argv[])
 	  have_efac = p.have_efac;
 	  pmodel = p.pmodel;
 
+#ifdef HAVE_MINUIT
+	  margin_phi0 = p.margin_phi0;
+	  margin_psi0 = p.margin_psi0;
+#else
+	  if (rank==0) cout << "MINUIT not available: any marginalization is disabled!" << endl;
+#endif
+	  
 	    // Copy config file
 	  sprintf(confname,"%s.config", root);
 	  ifstream  src("config.txt", ios::binary);
@@ -290,12 +311,16 @@ int main(int argc, char *argv[])
 	par->sampler = sampler;
 	par->have_efac = have_efac;
 	par->pmodel = pmodel;
+	par->margin_phi0 = margin_phi0;
+	par->margin_psi0 = margin_psi0;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
 		
 	ndims = nPar = 1;
 	ndims+=nfiles*3; nPar+=nfiles*3;  // nfiles for phi0
 	if (par->have_efac) {ndims+=1; nPar+=1;}  
-
+	if (par->margin_phi0) {ndims-=nfiles; nPar-=nfiles;}
+	if (par->margin_psi0) {ndims-=nfiles; nPar-=nfiles;}
+	
 	// Copy the range of parameters
 	if (rv == EXIT_SUCCESS) {
 	  par->r_alpha = p.alpha;
@@ -319,6 +344,9 @@ int main(int argc, char *argv[])
 	  cout << "ndims = " << ndims << endl;
 	  cout << "Assuming reading " << nfiles << " files" << endl;
 	  cout << "Basefilename " << root << endl;
+	  if (par->margin_phi0) cout << "Marginalize over phi0 " << endl;
+	  if (par->margin_psi0) cout << "Marginalize over psi0 " << endl;
+	  
 	  if (!par->pmodel)
 	      cout << "Forced precession model" << endl;
 	  else
@@ -335,7 +363,7 @@ int main(int argc, char *argv[])
 	  Settings settings;
           settings.nDims         = ndims;
           settings.nDerived      = nfiles;
-          settings.nlive         = 1000;
+          settings.nlive         = p.nlive;
           settings.num_repeats   = settings.nDims*5;
           settings.do_clustering = false;
           settings.precision_criterion = 1e-3;
@@ -350,7 +378,7 @@ int main(int argc, char *argv[])
           settings.posteriors    = true;
           settings.cluster_posteriors = false;
           settings.feedback      = 2;
-          settings.update_files  = settings.nlive;
+          settings.update_files  = settings.nlive*20;
           settings.boost_posterior= 5.0;
 
           //setup_loglikelihood();                                                                             
@@ -366,6 +394,70 @@ int main(int argc, char *argv[])
 	if (rank == 0) {
 	  // Read results from stats file
 	  read_stats_precessRVM(root, nPar, par);
+
+
+//#if 0
+#ifdef HAVE_MINUIT
+	  char label[16];
+	  /*
+	  vector<double> vrmsQ, vrmsU;
+	  vector< vector<double> > vQ, vU, vphase;
+	  vQ.resize(par->n_epoch); vU.resize(par->n_epoch); vphase.resize(par->n_epoch);
+	  
+	  for(unsigned int j = 0; j < par->n_epoch; j++) {
+	    vrmsQ.push_back(par->rmsQ[j]);
+	    vrmsU.push_back(par->rmsU[j]);
+	    for(unsigned int i = 0; i < par->npts[j]; i++) {
+	      vQ[j].push_back(par->Q[j][i]);
+	      vU[j].push_back(par->U[j][i]);
+	      vphase[j].push_back(par->phase[j][i]);
+	    }
+	    }*/
+	  
+	  if (par->margin_phi0 || par->margin_psi0) {
+            Pmargin fFCN(phase, Q, U, RMS_Q, RMS_U);
+            fFCN.set_params(par);
+	    //fFCN.printQU();
+	    
+            MnUserParameters upar;
+            if (par->margin_phi0) {
+              for(unsigned int j = 0; j < par->n_epoch; j++) {
+                sprintf(label, "phi0_%d", j);
+                upar.Add(label, par->phi0[j], 1., par->r_phi0[0] * DEG_TO_RAD, par->r_phi0[1] * DEG_TO_RAD);
+              }
+            }
+            if (par->margin_psi0) {
+              for(unsigned int j = 0; j < par->n_epoch; j++) {
+                sprintf(label, "psi0_%d", j);
+                upar.Add(label, par->psi0[j], 1., par->r_psi0[0] * DEG_TO_RAD, par->r_psi0[1] * DEG_TO_RAD);
+              }
+            }
+
+            MnMinimize migrad(fFCN, upar);
+            FunctionMinimum min = migrad();
+
+	    // output
+	    cout<<"minimum: "<<min<<endl;
+	    
+            if (par->margin_phi0) {
+              for(unsigned int j = 0; j < par->n_epoch; j++) {
+                sprintf(label, "phi0_%d", j);
+                par->phi0[j] = min.UserState().Value(label);
+		cout << "phi0 " << par->phi0[j] << endl;
+              }
+            }
+
+            if (par->margin_psi0) {
+              for(unsigned int j = 0; j < par->n_epoch; j++) {
+                sprintf(label, "psi0_%d", j);
+                par->psi0[j] = min.UserState().Value(label);
+		cout << "psi0 " << par->psi0[j] << endl;
+              }
+            }
+	  }
+#endif
+
+
 	  get_precessRVM_chi2(par);
 	}
 

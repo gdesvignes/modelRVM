@@ -4,6 +4,17 @@
 #include <stdlib.h>
 #include <complex>
 
+#ifdef HAVE_MINUIT
+#include "Minuit2/FunctionMinimum.h"
+#include "Minuit2/MnMigrad.h"
+#include "Minuit2/MnMinos.h"
+#include "Minuit2/MnMinimize.h"
+#include "Minuit2/MnUserParameters.h"
+#include "Minuit2/MnPrint.h"
+#include "Minuit2/FCNBase.h"
+#include "precess_margin.h"
+#endif
+
 #include "precess_likelihood_PC.h"
 #include "RVMnest.h"
 //#endif
@@ -39,8 +50,8 @@ void precessprior (double cube[], double theta[], int nDims, void *context) {
 	//else theta[ipar] = cube[ipar] * (0 + 30) - 30;
 	//ipar++;
 	theta[ipar] = cube[ipar] * (sp->r_beta[1] - sp->r_beta[0]) + sp->r_beta[0]; ipar++;
-	theta[ipar] = cube[ipar] * (sp->r_phi0[1] - sp->r_phi0[0]) + sp->r_phi0[0]; ipar++;
-	theta[ipar] = cube[ipar] * (sp->r_psi0[1] - sp->r_psi0[0]) + sp->r_psi0[0]; ipar++;
+	if (!sp->margin_phi0) {theta[ipar] = cube[ipar] * (sp->r_phi0[1] - sp->r_phi0[0]) + sp->r_phi0[0]; ipar++; }
+	if (!sp->margin_psi0) {theta[ipar] = cube[ipar] * (sp->r_psi0[1] - sp->r_psi0[0]) + sp->r_psi0[0]; ipar++; }
     }
 
     // EFACs                                                                                                                                        
@@ -74,8 +85,16 @@ double precessLogLike_PC(double theta[], int nDims, double phi[], int nDerived, 
     sp->alpha = theta[ipar] * DEG_TO_RAD; ipar++;
     for (unsigned int j = 0; j < sp->n_epoch; j++) {
 	sp->beta[j] = theta[ipar] * DEG_TO_RAD; ipar++;
-	sp->phi0[j] = theta[ipar] * DEG_TO_RAD; ipar++;
-	sp->psi0[j] = theta[ipar] * DEG_TO_RAD; ipar++;
+	if (sp->margin_phi0) {
+	  sp->phi0[j] = (sp->r_phi0[0] + sp->r_phi0[1])/2. * DEG_TO_RAD;
+	} else {
+	  sp->phi0[j] = theta[ipar] * DEG_TO_RAD; ipar++;
+	}
+	if (sp->margin_psi0) {
+	  sp->psi0[j] = (sp->r_psi0[0] + sp->r_psi0[1])/2. * DEG_TO_RAD;
+	} else {
+	  sp->psi0[j] = theta[ipar] * DEG_TO_RAD; ipar++;
+	}
     }
 
     // EFACs
@@ -84,6 +103,65 @@ double precessLogLike_PC(double theta[], int nDims, double phi[], int nDerived, 
             sp->efac[0] = theta[ipar]; ipar++;
         }
     }
+
+#ifdef HAVE_MINUIT
+    // Init arrays to be passed to Minuit
+    vector<double> vrmsQ, vrmsU;
+    vector< vector<double> > vQ, vU, vphase;
+    vQ.resize(sp->n_epoch); vU.resize(sp->n_epoch); vphase.resize(sp->n_epoch);
+    
+    for(unsigned int j = 0; j < sp->n_epoch; j++) {
+        vrmsQ.push_back(sp->rmsQ[j]);
+        vrmsU.push_back(sp->rmsU[j]);
+        for(unsigned int i = 0; i < sp->npts[j]; i++) {
+	    vQ[j].push_back(sp->Q[j][i]);
+	    vU[j].push_back(sp->U[j][i]);
+	    vphase[j].push_back(sp->phase[j][i]);
+	}
+    }
+    
+        if (sp->margin_phi0 || sp->margin_psi0) {
+            //RVM_Fcn fFCN();                                                                                                                                         
+            Pmargin fFCN(vphase, vQ, vU, vrmsQ, vrmsU);
+            fFCN.set_params(sp);
+
+            MnUserParameters upar;
+	    if (sp->margin_phi0) {
+	      for(unsigned int j = 0; j < sp->n_epoch; j++) {
+		sprintf(label, "phi0_%d", j);
+                upar.Add(label, sp->phi0[j], 1., sp->r_phi0[0] * DEG_TO_RAD, sp->r_phi0[1] * DEG_TO_RAD);
+	      }	    }
+	    if (sp->margin_psi0) {
+	      for(unsigned int j = 0; j < sp->n_epoch; j++) {
+                sprintf(label, "psi0_%d", j);
+                upar.Add(label, sp->psi0[j], 1., sp->r_psi0[0] * DEG_TO_RAD, sp->r_psi0[1] * DEG_TO_RAD);
+              }
+            }
+
+	    MnMinimize migrad(fFCN, upar);
+	    //cout << migrad.NFcn() << endl;                                                                                                                                   
+	    FunctionMinimum min = migrad(2., 1e-2);
+	    //cout << min.NFcn() << endl;  
+            //cout<<"minimum: "<<min<<endl;
+	    //migrad.PrintResults();
+	    
+	    if (sp->margin_phi0) {
+	      for(unsigned int j = 0; j < sp->n_epoch; j++) {
+		sprintf(label, "phi0_%d", j);
+	        sp->phi0[j] = min.UserState().Value(label);
+	      }
+	    }
+	    
+	    if (sp->margin_psi0) {
+	      for(unsigned int j = 0; j < sp->n_epoch; j++) {
+		sprintf(label, "psi0_%d", j);
+                sp->psi0[j] = min.UserState().Value(label);
+	      }
+            }
+        }
+#endif
+
+    
     
     // Compute chi**2
     get_precessRVM_chi2(sp);

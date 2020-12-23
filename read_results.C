@@ -159,8 +159,8 @@ int read_stats_precessRVM(char *root, int npar, MNStruct *p)
 		p->alpha = cols[ipar] * M_PI/180.; ipar++;
 		for (unsigned int j = 0; j < p->n_epoch; j++) {
 		    p->beta[j] = cols[ipar] * M_PI/180.; ipar++;
-		    p->phi0[j] = cols[ipar] * M_PI/180.; ipar++;
-		    p->psi0[j] = cols[ipar] * M_PI/180.; ipar++;
+		    if (!p->margin_phi0) {p->phi0[j] = cols[ipar] * M_PI/180.; ipar++;}
+		    if (!p->margin_psi0) {p->psi0[j] = cols[ipar] * M_PI/180.; ipar++;}
 		}
 
 		if (p->have_efac) {
