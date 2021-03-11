@@ -137,10 +137,11 @@ int main(int argc, char *argv[])
 	int ascii_output = 0;
 	
 	int rank, size;
+	MPI_Comm world_comm;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
-
+	MPI_Comm_dup(MPI_COMM_WORLD, &world_comm);
 	// Read Params from config files
 	param p;
 	p.numfiles = nfiles;
@@ -278,9 +279,9 @@ int main(int argc, char *argv[])
 	par->have_efac = have_efac;
 	for(unsigned i = 0; i < nfiles; i++) par->epoch[i] = MJD[i];
 		
-	ndims = nPar = 1;
-	ndims+=nfiles*2; nPar+=nfiles*2;  // only 2 params per epoch, i.e. phi0 and psi0 from the RVM
-	ndims+=5; nPar+=5;
+	ndims = nPar = 3;
+	ndims+=nfiles*3; nPar+=nfiles*3;  // only 2 params per epoch, i.e. phi0 and psi0 from the RVM
+	//ndims+=3; nPar+=3;
 
 	if (par->have_efac) {ndims+=1; nPar+=1;}  
 
@@ -342,7 +343,7 @@ int main(int argc, char *argv[])
 
           //setup_loglikelihood();                                                                             
           sp = par;
-          run_polychord(precessmLogLike_PC, precessmprior, settings) ;
+          run_polychord(precessmLogLike_PC, precessmprior, settings, world_comm) ;
 #else
 	  cerr << "PolyChord library not detected during configure. Aborting! "<< endl;
 	  return(-1);

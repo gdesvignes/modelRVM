@@ -9,11 +9,13 @@ typedef struct param {
     int ceff;
     double efr;
     char *basename;
-    
+  int nrepeats;
+  
     // config
     int have_efac;  
     double threshold;
-    int margin_phi0;  
+    int margin_phi0;
+    int margin_psi0;
     int have_aberr_offset;
     int sin_psi;
     int have_offset_dipole;
@@ -21,6 +23,8 @@ typedef struct param {
 
     // Params
     double *alpha;
+    double *alpha1;
+    double *alpha2;
     double *beta;
     double *delta;
     double *Phi0;

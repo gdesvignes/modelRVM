@@ -45,6 +45,14 @@ void precessprior (double cube[], double theta[], int nDims, void *context) {
      
     theta[ipar] = cube[ipar] * (sp->r_alpha[1] - sp->r_alpha[0]) + sp->r_alpha[0];
     ipar++;
+
+    if (sp->pmodel==2 || sp->pmodel==3) {
+      theta[ipar] = cube[ipar] * (sp->r_alpha1[1] - sp->r_alpha1[0]) + sp->r_alpha1[0];
+      ipar++;
+      theta[ipar] = cube[ipar] * (sp->r_alpha2[1] - sp->r_alpha2[0]) + sp->r_alpha2[0];
+      ipar++;
+    }
+    
     for (unsigned int j = 0; j < sp->n_epoch; j++) {
 	//if (sp->epoch[j]<58570) theta[ipar]= cube[ipar] *(30-0) + 0;
 	//else theta[ipar] = cube[ipar] * (0 + 30) - 30;
@@ -52,7 +60,7 @@ void precessprior (double cube[], double theta[], int nDims, void *context) {
 	theta[ipar] = cube[ipar] * (sp->r_beta[1] - sp->r_beta[0]) + sp->r_beta[0]; ipar++;
 	if (!sp->margin_phi0) {theta[ipar] = cube[ipar] * (sp->r_phi0[1] - sp->r_phi0[0]) + sp->r_phi0[0]; ipar++; }
 	if (!sp->margin_psi0) {theta[ipar] = cube[ipar] * (sp->r_psi0[1] - sp->r_psi0[0]) + sp->r_psi0[0]; ipar++; }
-    }
+     }
 
     // EFACs                                                                                                                                        
     if (sp->have_efac) {
@@ -83,6 +91,10 @@ double precessLogLike_PC(double theta[], int nDims, double phi[], int nDerived, 
     
     int ipar=0;
     sp->alpha = theta[ipar] * DEG_TO_RAD; ipar++;
+    if (sp->pmodel==2 || sp->pmodel==3) {
+      sp->alpha1 = theta[ipar] * DEG_TO_RAD; ipar++;
+      sp->alpha2 = theta[ipar] * DEG_TO_RAD; ipar++;
+    }
     for (unsigned int j = 0; j < sp->n_epoch; j++) {
 	sp->beta[j] = theta[ipar] * DEG_TO_RAD; ipar++;
 	if (sp->margin_phi0) {

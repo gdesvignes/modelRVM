@@ -21,7 +21,7 @@ void get_precessmRVM_chi2(MNStruct *par) {
     double alpha = par->alpha;
     double prev_chi = 0.0;
     double rms2Q, rms2U;
-    double beta;
+    double beta, zeta;
 
     int debug = 0;
     if (debug) {
@@ -52,10 +52,11 @@ void get_precessmRVM_chi2(MNStruct *par) {
 	par->Ltot[j] = 0;
 
 	// Get beta from the model
-	beta = par->beta0 + par->betaamp * sin(2*M_PI* par->pperiod / exp(par->epoch[j] - par->mjd0)  * (par->epoch[j] - par->mjd0) + par->pphase);
+	//beta = par->beta0 + par->betaamp * sin(2*M_PI* par->pperiod / exp(par->epoch[j] - par->mjd0)  * (par->epoch[j] - par->mjd0) + par->pphase);
+	zeta = (par->alpha + par->mjd0*pow((par->epoch[j] - 58460),1) + par->pperiod*pow((par->epoch[j] - 58460),2));
 
 	for(unsigned int i = 0; i < par->npts[j]; i++) {
-	    PA = get_RVM(alpha, beta, par->phi0[j], par->psi0[j], par->phase[j][i]);
+	    PA = get_RVM(zeta-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
 
 	    Ln = (par->Q[j][i]*cos(2*PA) / rms2Q + par->U[j][i]*sin(2*PA) / rms2U) 
 		/ (cos(2*PA)*cos(2*PA) / rms2Q + sin(2*PA)*sin(2*PA) / rms2U);

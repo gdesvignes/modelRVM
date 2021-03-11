@@ -36,16 +36,16 @@ endif
 
 
 globalRVMnest_SOURCES = globalRVMnest.C
-globalRVMnest_LDADD = libRVMnest.la
+globalRVMnest_LDADD = libRVMnest.la @PSRCHIVE_LIBS@
 
 RVMnest_SOURCES = RVMnest.C
 RVMnest_LDADD = libRVMnest.la
 
 precessnest_SOURCES = precessnest.C
-precessnest_LDADD = libRVMnest.la
+precessnest_LDADD = libRVMnest.la @PSRCHIVE_LIBS@
 
 precessnestmodel_SOURCES = precessnestmodel.C
-precessnestmodel_LDADD = libRVMnest.la
+precessnestmodel_LDADD = libRVMnest.la @PSRCHIVE_LIBS@
 
 if HAVE_POLYCHORD
 globalRVMnest_LDADD +=  @POLYCHORD_LIBS@

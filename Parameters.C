@@ -21,6 +21,7 @@ int readParameters(param *p, char *paramFile){
     p->IS = g_key_file_get_integer(gkf,"multinest","IS",NULL);
     p->nlive = g_key_file_get_integer(gkf,"multinest","nlive",NULL);
     p->ceff = g_key_file_get_integer(gkf,"multinest","ceff",NULL);
+    p->nrepeats = g_key_file_get_integer(gkf,"multinest","nrepeats",NULL);
     p->efr = g_key_file_get_double(gkf,"multinest","efr",NULL);
     if (g_key_file_has_key(gkf,"multinest","basename",NULL))
         p->basename = g_key_file_get_string(gkf,"multinest","basename",NULL);
@@ -34,6 +35,8 @@ int readParameters(param *p, char *paramFile){
     p->pmodel = g_key_file_get_integer(gkf,"config","pmodel",NULL);
 
     p->alpha = g_key_file_get_double_list(gkf,"params","alpha", &length, NULL);
+    p->alpha1 = g_key_file_get_double_list(gkf,"params","alpha1", &length, NULL);
+    p->alpha2 = g_key_file_get_double_list(gkf,"params","alpha2", &length, NULL);
     p->beta = g_key_file_get_double_list(gkf,"params","beta", &length, NULL);
     p->delta = g_key_file_get_double_list(gkf,"params","delta", &length, NULL);
     p->Phi0 = g_key_file_get_double_list(gkf,"params","Phi0", &length, NULL);

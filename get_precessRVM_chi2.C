@@ -19,7 +19,7 @@ void get_precessRVM_chi2(MNStruct *par) {
     complex <double> L, arg;
     int totnbpts=0;
     double prev_chi = 0.0;
-    double rms2Q, rms2U;
+    double rms2Q, rms2U, alpha_tmp;
     par->chi = 0.0;
     par->logdetN = 0.0; 
     //cout << alpha / DEG_TO_RAD << " " << par->beta[0]  / DEG_TO_RAD<< " "<< par->phi0[0]  / DEG_TO_RAD << " " << par->psi0[0] << endl;
@@ -38,8 +38,16 @@ void get_precessRVM_chi2(MNStruct *par) {
 	for(unsigned int i = 0; i < par->npts[j]; i++) {
 	    if (par->pmodel==0) // pmodel=0 forced precession, pmodel=1 free precession 
 		PA2 = 2*get_RVM(par->alpha, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
-	    else // in this case, par->alpha is really zeta
+	    else if (par->pmodel==1) // in this case, par->alpha is really zeta
 		PA2 = 2*get_RVM(par->alpha-par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+	    else if (par->pmodel==2) {
+	      alpha_tmp = par->alpha + par->alpha1*(par->epoch[j]-par->epoch[0]) + par->alpha2*pow(par->epoch[j]-par->epoch[0], 2);
+	      PA2 = 2*get_RVM(alpha_tmp, par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+	    }
+	    else if (par->pmodel==3) {
+	      alpha_tmp = par->alpha + par->alpha1*(par->epoch[j]-par->epoch[0]) + par->alpha2*pow(par->epoch[j]-par->epoch[0], 2);
+	      PA2 = 2*get_RVM(alpha_tmp - par->beta[j], par->beta[j], par->phi0[j], par->psi0[j], par->phase[j][i]);
+	    }
 
 	    Ln = (par->Q[j][i]*cos(PA2) / rms2Q + par->U[j][i]*sin(PA2) / rms2U) 
 		/ (cos(PA2)*cos(PA2) / rms2Q + sin(PA2)*sin(PA2) / rms2U);

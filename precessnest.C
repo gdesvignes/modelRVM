@@ -148,14 +148,17 @@ int main(int argc, char *argv[])
 	int psi_jump_fixed=1;
 	int sampler = 0;
 	int sin_psi = 0;
+	int nrepeats = 5;
 	int ascii_output = 1;
 	int margin_phi0 = 0, margin_psi0 = 0;
 	
 	int rank, size;
+	MPI_Comm world_comm;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
-
+	MPI_Comm_dup(MPI_COMM_WORLD, &world_comm);
+	
 	// Read Params from config files
 	param p;
 	p.numfiles = nfiles;
@@ -166,6 +169,7 @@ int main(int argc, char *argv[])
 	  sampler = p.sampler;
 	  IS = p.IS;
 	  nlive = p.nlive;
+	  nrepeats = p.nrepeats;
 	  ceff = p.ceff;
 	  efr = p.efr;
 	  strcpy(root, p.basename);
@@ -320,15 +324,18 @@ int main(int argc, char *argv[])
 	if (par->have_efac) {ndims+=1; nPar+=1;}  
 	if (par->margin_phi0) {ndims-=nfiles; nPar-=nfiles;}
 	if (par->margin_psi0) {ndims-=nfiles; nPar-=nfiles;}
+	if (par->pmodel==2 || par->pmodel==3) {ndims+=2; nPar+=2;}   
 	
 	// Copy the range of parameters
 	if (rv == EXIT_SUCCESS) {
 	  par->r_alpha = p.alpha;
+	  par->r_alpha1 = p.alpha1;
+	  par->r_alpha2 = p.alpha2;
 	  par->r_beta = p.beta;
 	  par->r_phi0 = p.phi0;
 	  par->r_psi0 = p.psi0;
 	  par->r_efac = p.efac;
-	  
+	  strncpy(par->root, root, 32);
 	}
 	par->do_plot = 0;
 
@@ -341,16 +348,21 @@ int main(int argc, char *argv[])
 	  cout << "Have EFAC   = " << have_efac << endl;
 	  cout << "Threshold   = " << threshold << endl;
 	  cout << "nlive = " << nlive << endl;
+	  if (sampler==1) cout << "nrepeats = " << nrepeats << endl;
 	  cout << "ndims = " << ndims << endl;
 	  cout << "Assuming reading " << nfiles << " files" << endl;
 	  cout << "Basefilename " << root << endl;
 	  if (par->margin_phi0) cout << "Marginalize over phi0 " << endl;
 	  if (par->margin_psi0) cout << "Marginalize over psi0 " << endl;
 	  
-	  if (!par->pmodel)
+	  if (par->pmodel==0)
 	      cout << "Forced precession model" << endl;
-	  else
+	  else if (par->pmodel==1)
 	      cout << "Free precession model" << endl;
+	  else if (par->pmodel==2)
+	    cout << "Varying alpha " << endl;
+	  else if (par->pmodel==3)
+	    cout << "Varying alpha, free precession" << endl;
 	  cout << endl;
 	}
 
@@ -360,11 +372,13 @@ int main(int argc, char *argv[])
 	}
 	else if (sampler==1) {
 #ifdef HAVE_POLYCHORD 
-	  Settings settings;
-          settings.nDims         = ndims;
-          settings.nDerived      = nfiles;
+	  Settings settings{ndims, nfiles};
+	  std::vector<double> g_frac{0.0};
+	  std::vector<int> g_dims{ndims};
+          //settings.ndims         = ndims;
+          //settings.nDerived      = nfiles;
           settings.nlive         = p.nlive;
-          settings.num_repeats   = settings.nDims*5;
+          settings.num_repeats   = settings.nDims*nrepeats;
           settings.do_clustering = false;
           settings.precision_criterion = 1e-3;
           settings.base_dir.assign(root);
@@ -378,12 +392,15 @@ int main(int argc, char *argv[])
           settings.posteriors    = true;
           settings.cluster_posteriors = false;
           settings.feedback      = 2;
-          settings.update_files  = settings.nlive*20;
-          settings.boost_posterior= 5.0;
+          settings.maximise      = 0;
+          settings.boost_posterior = 0.0;
+	  settings.compression_factor = 0.36787944117144233;
+	  settings.grade_frac    = g_frac;
+	  settings.grade_dims    = g_dims; 
 
           //setup_loglikelihood();                                                                             
           sp = par;
-          run_polychord(precessLogLike_PC, precessprior, settings) ;
+          run_polychord(precessLogLike_PC, precessprior, settings, world_comm) ;
 #else
 	  cerr << "PolyChord library not detected during configure. Aborting! "<< endl;
 	  return(-1);
@@ -461,7 +478,7 @@ int main(int argc, char *argv[])
 	  get_precessRVM_chi2(par);
 	}
 
-	MPI_Finalize();
+	//MPI_Finalize();
 
 	return(0);
 }

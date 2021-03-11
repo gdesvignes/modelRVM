@@ -1,6 +1,9 @@
-#ifndef INTERFACES_HPP
-#define INTERFACES_HPP
+#pragma once
 #include <string>
+#include <vector>
+//#ifdef USE_MPI
+#include "mpi.h"
+//#endif
 
 struct Settings
 {
@@ -8,9 +11,12 @@ struct Settings
     int nDerived;
     int nlive;
     int num_repeats;
+    int nprior;
+    int nfail;
     bool do_clustering;
     int feedback;
     double precision_criterion;
+    double logzero;
     int max_ndead;
     double boost_posterior;
     bool posteriors;
@@ -22,20 +28,68 @@ struct Settings
     bool write_stats;
     bool write_live;
     bool write_dead;
-    int update_files;
+    bool write_prior;
+    bool maximise;
+    double compression_factor;
     std::string base_dir;
     std::string file_root;
+    std::vector<double> grade_frac;
+    std::vector<int> grade_dims;
+    std::vector<double> loglikes;
+    std::vector<int> nlives;
+    int seed;
 
     Settings(int _nDims=0,int _nDerived=0);
 };
 
-void run_polychord( double (*loglikelihood)(double*,int,double*,int,void *), void (*prior)(double*,double*,int,void*), Settings);
-void run_polychord( double (*loglikelihood)(double*,int,double*,int), Settings);  
+/*
+void run_polychord( 
+        double (*c_loglikelihood_ptr)(double*,int,double*,int), 
+        void (*c_prior_ptr)(double*,double*,int), 
+        void (*c_dumper_ptr)(int,int,int,double*,double*,double*,double,double), 
+        Settings s);
+void run_polychord( 
+        double (*loglikelihood)(double*,int,double*,int),
+        void (*dumper)(int,int,int,double*,double*,double*,double,double), 
+        Settings);
+void run_polychord( 
+        double (*loglikelihood)(double*,int,double*,int),
+        void (*prior)(double*,double*,int),
+        Settings);
+void run_polychord(
+        double (*loglikelihood)(double*,int,double*,int),
+        Settings);  
+void run_polychord( 
+        double (*loglikelihood)(double*,int,double*,int), 
+        void (*setup_loglikelihood)(), 
+        std::string);
+*/
+void run_polychord( 
+		   double (*loglikelihood)(double*,int,double*,int,void*), 
+        void (*prior)(double*,double*,int,void*), 
+        void (*dumper)(int,int,int,double*,double*,double*,double,double), 
+        Settings, MPI_Comm &comm);
+void run_polychord( 
+		   double (*loglikelihood)(double*,int,double*,int,void*), 
+        void (*prior)(double*,double*,int,void*), 
+        void (*dumper)(int,int,int,double*,double*,double*,double,double), 
+        Settings, MPI_Comm &comm);
+void run_polychord( 
+		   double (*loglikelihood)(double*,int,double*,int,void*),
+        void (*dumper)(int,int,int,double*,double*,double*,double,double), 
+        Settings, MPI_Comm &comm);
+void run_polychord( 
+		   double (*loglikelihood)(double*,int,double*,int,void*),
+        void (*prior)(double*,double*,int,void*),
+        Settings, MPI_Comm &comm);
+void run_polychord(
+		   double (*loglikelihood)(double*,int,double*,int,void*),
+        Settings, MPI_Comm &comm);  
+void run_polychord( 
+		   double (*loglikelihood)(double*,int,double*,int,void*), 
+        void (*setup_loglikelihood)(), 
+        std::string, MPI_Comm &comm);
 
-double default_loglikelihood(double*,int,double*,int); 
-void default_prior(double*,double*,int); 
-
-
-
-
-#endif
+		   double default_loglikelihood(double*,int,double*,int,void*); 
+void default_prior(double*,double*,int,void*); 
+void default_dumper(int,int,int,double*,double*,double*,double,double);

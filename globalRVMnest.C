@@ -137,10 +137,12 @@ int main(int argc, char *argv[])
 	int ascii_output =1;
 	int totnpts = 0;
 	int rank, size;
+	MPI_Comm world_comm;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
-
+	MPI_Comm_dup(MPI_COMM_WORLD, &world_comm);
+	
 	// Read Params from config files
 	param p;
 	p.numfiles = nfiles;
@@ -384,12 +386,12 @@ int main(int argc, char *argv[])
           settings.posteriors    = true;
           settings.cluster_posteriors = false;
           settings.feedback      = 2;
-          settings.update_files  = settings.nlive;
+          //settings.update_files  = settings.nlive;
           settings.boost_posterior= 5.0;
 
           //setup_loglikelihood();                                                                             
           sp = par;
-          run_polychord(globalRVMLogLike_PC, prior, settings) ;
+          run_polychord(globalRVMLogLike_PC, prior, settings, world_comm) ;
 #else
 	  cerr << "PolyChord library not detected during configure. Aborting! "<< endl;
 	  return(-1);

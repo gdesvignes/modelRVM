@@ -24,11 +24,15 @@ typedef struct {
     int have_aberr_offset;
     int nfiles_aberr;
     int margin_phi0;
+    int margin_psi0;
     int psi_jump_fixed;
     int do_plot;
     int sin_psi;
-    
+    char root[32];
+  
     double alpha;   /*  par[0] */
+    double alpha1;
+    double alpha2;
     double *beta;
     double delta;   /*  par[1] */
     double phase0;  /* */
@@ -69,6 +73,8 @@ typedef struct {
     double *efac;
     
     double *r_alpha;
+    double *r_alpha1;
+    double *r_alpha2;
     double *r_beta;
     double *r_delta;
     double *r_Phi0;

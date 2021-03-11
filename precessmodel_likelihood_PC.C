@@ -33,31 +33,24 @@ void precessmprior (double cube[], double theta[], int nDims, void *context) {
     int ipar = 0;
 
     // Alpha
-    theta[ipar] = cube[ipar] * (sp->r_alpha[1] - sp->r_alpha[0]) + sp->r_alpha[0];
-    ipar++;
+    //theta[ipar] = cube[ipar] * (sp->r_alpha[1] - sp->r_alpha[0]) + sp->r_alpha[0];
+    //ipar++;
 
-    // Beta Amplitude
-    theta[ipar] = cube[ipar] * (sp->r_beta[1] - sp->r_beta[0]) + sp->r_beta[0]; ipar++;
+    // alpha
+    theta[ipar] = cube[ipar] * 180; ipar++;
 
-    // Beta0
-    theta[ipar] = cube[ipar] * 40 - 20; ipar++;
+    // First coeff
+    theta[ipar] = cube[ipar] * 2 - 1; ipar++;
 
-    // MJD0
-    theta[ipar] = cube[ipar] * (100) - 50 + sp->epoch[0]; ipar++;
+    // Second coeff
+    theta[ipar] = cube[ipar] * 2 - 1; ipar++;
 
-    // Period of precession in days
-    theta[ipar] = cube[ipar] * (200) - 100; ipar++;
+    // Third coeff
+    //theta[ipar] = cube[ipar] * 2 - 1; ipar++;
 
-    // Phase of precession at MJD of first epoch
-    theta[ipar] = cube[ipar] * (2*M_PI - 0) + 0; ipar++;
-
-    // Damping
-    //theta[ipar] =  cube[ipar] * 4 - 2; ipar++;
-
-    // power factor
-    //theta[ipar] = pow( 10, cube[ipar] * (0 - (-1)) - 1); ipar++;
 
     for (unsigned int j = 0; j < sp->n_epoch; j++) {
+	theta[ipar] = cube[ipar] * (sp->r_beta[1] - sp->r_beta[0]) + sp->r_beta[0]; ipar++;
 	theta[ipar] = cube[ipar] * (sp->r_phi0[1] - sp->r_phi0[0]) + sp->r_phi0[0]; ipar++;
 	theta[ipar] = cube[ipar] * (sp->r_psi0[1] - sp->r_psi0[0]) + sp->r_psi0[0]; ipar++;
     }
@@ -69,11 +62,6 @@ void precessmprior (double cube[], double theta[], int nDims, void *context) {
         }
     }
 
-
-    //theta[0] = 100;
-    //theta[1] = 3 ;
-    //theta[2] = 180 ;
-    //theta[3] = 45;
 }
 
 double precessmLogLike_PC(double theta[], int nDims, double phi[], int nDerived, void *context) {
@@ -92,13 +80,12 @@ double precessmLogLike_PC(double theta[], int nDims, double phi[], int nDerived,
     
     int ipar=0;
     sp->alpha = theta[ipar] * DEG_TO_RAD; ipar++;
-    sp->betaamp = theta[ipar] * DEG_TO_RAD; ipar++;
-    sp->beta0 = theta[ipar] * DEG_TO_RAD; ipar++;
     sp->mjd0 = theta[ipar]; ipar++;
     sp->pperiod = theta[ipar]; ipar++;
-    sp->pphase = theta[ipar]; ipar++;
-    //sp->pfact = theta[ipar]; ipar++;
+    //sp->pphase = theta[ipar]; ipar++;
+
     for (unsigned int j = 0; j < sp->n_epoch; j++) {
+	sp->beta[j] = theta[ipar] * DEG_TO_RAD; ipar++;
 	sp->phi0[j] = theta[ipar] * DEG_TO_RAD; ipar++;
 	sp->psi0[j] = theta[ipar] * DEG_TO_RAD; ipar++;
     }
