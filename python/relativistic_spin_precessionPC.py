@@ -10,7 +10,6 @@ from rvm import rvm
 import pypolychord
 from pypolychord.settings import PolyChordSettings
 from pypolychord.priors import UniformPrior, GaussianPrior, LogUniformPrior
-import prior
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
@@ -201,14 +200,14 @@ class Precessnest():
             self.labels.extend(["omega"])
             self.prate = None
         else:
-            self.prate = 1.21
-            #self.prate = 2.23
+            #self.prate = 1.21
+            self.prate = 2.23
         if self.have_inc:
             self.labels.extend(["inc"])
             self.inc = None
         else:
-            self.inc = 132.8
-            #self.inc = 47.1
+            #self.inc = 132.8
+            self.inc = 47.1
         if self.have_EFAC:
             self.labels.extend(["EFAC_%d"%i for i in range(self.nEFAC)])
         #if self.nrcvr>1:
@@ -221,16 +220,16 @@ class Precessnest():
 
         pcube = np.zeros(cube.shape)
         ipar = 0
-        pcube[ipar] = GaussianPrior(25,5) (cube[ipar]); ipar += 1 # Alpha
-        pcube[ipar] = GaussianPrior(25,5) (cube[ipar]); ipar += 1 # Delta
-        pcube[ipar] = GaussianPrior(350,5) (cube[ipar]); ipar += 1 # phi00
-        pcube[ipar] = GaussianPrior(-60,5) (cube[ipar]); ipar += 1 # psi00
+        pcube[ipar] = GaussianPrior(100,10) (cube[ipar]); ipar += 1 # Alpha
+        pcube[ipar] = GaussianPrior(110,10) (cube[ipar]); ipar += 1 # Delta
+        pcube[ipar] = GaussianPrior(250,15) (cube[ipar]); ipar += 1 # phi00
+        pcube[ipar] = GaussianPrior(60,30) (cube[ipar]); ipar += 1 # psi00
         #pcube[ipar] = UniformPrior(0,90) (cube[ipar]); ipar += 1 # Alpha
         #pcube[ipar] = UniformPrior(0,180) (cube[ipar]); ipar += 1 # Delta
         #pcube[ipar] = UniformPrior(0,360) (cube[ipar]); ipar += 1 # phi00
         #pcube[ipar] = UniformPrior(-90,90) (cube[ipar]); ipar += 1 # psi00
         for ii in range(self.nfiles):
-            pcube[ipar+ii] = GaussianPrior(180, 8) (cube[ipar+ii]);
+            pcube[ipar+ii] = GaussianPrior(90, 5) (cube[ipar+ii]);
         ipar += self.nfiles
         if self.have_prate:
             pcube[ipar] = GaussianPrior(3,5) (cube[ipar]); ipar += 1 # prate
@@ -297,13 +296,13 @@ class Precessnest():
         integ = ar.get_first_Integration()
         mjd = float(integ.get_epoch().strtempo())
         # Get baseline RMS (1) for total intensity (0)
-        #nI = np.sqrt((integ.baseline_stats()[1][0]))
-        #nQ = np.sqrt((integ.baseline_stats()[1][1]))
-        #nU = np.sqrt((integ.baseline_stats()[1][2]))
+        nI = np.sqrt((integ.baseline_stats()[1][0]))
+        nQ = np.sqrt((integ.baseline_stats()[1][1]))
+        nU = np.sqrt((integ.baseline_stats()[1][2]))
 
-        nI = np.std(np.concatenate([I[0:nbin//4], I[nbin//4 * 3:nbin]]))
-        nQ = np.std(np.concatenate([Q[0:nbin//4], Q[nbin//4 * 3:nbin]]))
-        nU = np.std(np.concatenate([U[0:nbin//4], U[nbin//4 * 3:nbin]]))
+        #nI = np.std(np.concatenate([I[0:nbin//4], I[nbin//4 * 3:nbin]]))
+        #nQ = np.std(np.concatenate([Q[0:nbin//4], Q[nbin//4 * 3:nbin]]))
+        #nU = np.std(np.concatenate([U[0:nbin//4], U[nbin//4 * 3:nbin]]))
         
         xm = np.ma.masked_where(L<sig*nI,x).compressed()
         Qm = np.ma.masked_where(L<sig*nI,Q).compressed()
@@ -339,7 +338,7 @@ class Precessnest():
 # Input filenames
 filenames = sys.argv[1:]
 cfgfilename = "config.ini"
-sig = 4 # Threshold for L (in sigma)
+sig = 2.5 # Threshold for L (in sigma)
 have_EFAC = True
 nlive = 1000 # Power of 2s for GPU
 #frac_remain = 0.1
